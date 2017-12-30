@@ -1,1 +1,2 @@
 colorlog==2.7.0
+pylint==1.5.4
