@@ -99,3 +99,10 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+###############################################################################
+# End of junk that came with the default .gitignore; below is stuff we added.
+
+# vim .swp files, so I can just "git add ." without catching them.
+.sw[nop]
+.*.sw[nop]
