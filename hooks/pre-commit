@@ -1,0 +1,40 @@
+#!/bin/bash
+
+fail() {
+    echo
+    if (( $# > 0 )); then
+        echo "** Pre-commit hook failed: $1 **"
+    else
+        echo "** Pre-commit hook failed **"
+    fi
+    exit 1
+}
+
+# Make sure we're run from the directory containing bin/, else we're going to
+# have a bad time.
+if [ ! -d bin ]; then
+    echo "Internal error in pre-commit hook: not run from root of repository."
+    fail
+fi
+
+# Check that tests and lint run cleanly.
+# TODO: Add a script bin/validate.sh that runs these and then notes down
+# somewhere that <hash for current staged repo state> validated cleanly. If
+# that note is present, then don't re-validate during pre-commit hook.
+
+# Amazingly enough, pytest doesn't seem to have an option for "produce no
+# output on success". So simulate that ourselves.
+# Thanks to:
+#     https://unix.stackexchange.com/a/41388
+# for the simple solution to this, which doesn't require a temp file or
+# something more complicated.
+if ! test_output="$(./bin/test.sh -- --color=yes)"; then
+    echo "$test_output"
+    fail "Not all tests passed."
+fi
+
+# -rn is shorthand for "--reports=no", and suppresses all output except the
+# actual messages (errors, warnings, etc.).
+if ! ./bin/lint.sh -rn; then
+    fail "Lint output was not clean."
+fi

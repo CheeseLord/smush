@@ -1,9 +1,5 @@
 #!/bin/bash
 
-###############################################################################
-echo "Not Implemented -- no hooks yet."
-exit 1
-
 # See
 #     https://stackoverflow.com/a/3464399
 #for some more sophisticated ideas for this.
