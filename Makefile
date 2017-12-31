@@ -22,19 +22,10 @@ smush: Makefile $(BUILDFILES)/requirements.txt
 # 	cp $(BUILDFILES)/panda3d.pth $(VIRTUALENV)/lib/python2.7/site-packages/
 
 simplify:
-	find src -name '*.pyc' -exec echo removing '{}' ';' \
-	                       -exec rm -f '{}' ';'
+	rm -rf tests/__pycache__
+	find src tests -name '*.pyc' -exec echo removing '{}' ';' \
+	                             -exec rm -f '{}' ';'
 
 clean: simplify
 	rm -rf $(VIRTUALENV)
-
-# TODO: Once we get tests working, replace the simplify/clean rules with these:
-
-# simplify:
-# 	rm -rf tests/__pycache__
-# 	find src tests -name '*.pyc' -exec echo removing '{}' ';' \
-# 	                             -exec rm -f '{}' ';'
-# 
-# clean: simplify
-# 	rm -rf $(VIRTUALENV)
-# 	rm -rf .tox .cache
+	rm -rf .tox .cache

@@ -1,2 +1,4 @@
 colorlog==2.7.0
 pylint==1.5.4
+pytest==3.0.2
+tox==2.3.1

@@ -1,9 +1,5 @@
 #!/bin/bash
 
-###############################################################################
-echo "Not Implemented -- no hooks yet."
-exit 1
-
 # Return the same exit status as tox.
 set -e
 source "$(dirname "$(readlink -e "$0")")/head.sh"
