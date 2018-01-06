@@ -2,6 +2,7 @@ import sys
 
 from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
+from panda3d.core import WindowProperties  # pylint: disable=no-name-in-module
 
 def main():
     app = MyApp()
@@ -43,7 +44,14 @@ class MyApp(ShowBase):
         self.playerHeadNode = self.playerNode.attachNewNode("PlayerHead")
         self.playerHeadNode.setPos(0, 0, 1)
         self.camera.reparentTo(self.playerHeadNode)
+
+        # Hide the mouse.
         self.disableMouse()
+        props = WindowProperties()
+        props.setCursorHidden(True)
+        self.win.requestProperties(props)
+        self.taskMgr.add(self.controlCamera, "camera-task")
+
         self.setupEventHandlers()
         self.taskMgr.add(self.updatePlayerPosTask, "UpdatePlayerPosTask")
 
@@ -91,6 +99,12 @@ class MyApp(ShowBase):
             fwdDelta = -backwardSpeed * dt
 
         self.playerNode.setPos(self.playerNode, rightDelta, fwdDelta, 0)
+
+        return Task.cont
+
+    def controlCamera(self, task):  # pylint: disable=unused-argument
+        # TODO: Actually control the camera.
+        self.win.movePointer(0, 100, 100)
 
         return Task.cont
 
