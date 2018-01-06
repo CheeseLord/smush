@@ -45,10 +45,6 @@ class MyApp(ShowBase):
         self.scene.setScale(0.25, 0.25, 0.25)
         self.scene.setPos(-8, 42, 0)
 
-        # Mapping of keys currently pressed (key name : bool). Populated in
-        # setupEventHandlers.
-        self.keys = {}
-
         self.playerNode = self.render.attachNewNode("Player")
         self.playerHeadNode = self.playerNode.attachNewNode("PlayerHead")
         self.playerHeadNode.setPos(0, 0, 1)
@@ -65,17 +61,6 @@ class MyApp(ShowBase):
         self.taskMgr.add(self.updatePlayerPosTask, "UpdatePlayerPosTask")
 
     def setupEventHandlers(self):
-        def pushKey(key, value):
-            self.keys[key] = value
-
-        for key in ["w", "a", "s", "d", "q", "e"]:
-            self.keys[key] = False
-            self.accept(key, pushKey, [key, True])
-            self.accept("%s-up" % key, pushKey, [key, False])
-            # WaRTS had this line, but it seems a little sketchy to me...
-            # shouldn't we like note the modifier or something?
-            # self.accept("shift-%s" % key, pushKey, [key, True])
-
         # Provide a way to exit even when we make the window fullscreen.
         self.accept('control-q', sys.exit)
 
@@ -95,10 +80,13 @@ class MyApp(ShowBase):
         sidewaysSpeed = 15
         backwardSpeed = 10
 
-        moveFwd   = self.keys["w"]
-        moveLeft  = self.keys["a"]
-        moveRight = self.keys["d"]
-        moveBack  = self.keys["s"]
+        # See:
+        #     https://www.panda3d.org/manual/index.php/Keyboard_Support
+        # section "Polling interface"
+        moveFwd   = self.mouseWatcherNode.is_button_down("w")
+        moveLeft  = self.mouseWatcherNode.is_button_down("a")
+        moveRight = self.mouseWatcherNode.is_button_down("d")
+        moveBack  = self.mouseWatcherNode.is_button_down("s")
 
         rightDelta = (moveRight - moveLeft) * sidewaysSpeed * dt
         fwdDelta = 0
