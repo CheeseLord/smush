@@ -5,6 +5,7 @@ from direct.task import Task
 from panda3d.core import WindowProperties  # pylint: disable=no-name-in-module
 
 from src.logconfig import newLogger
+from src.utils import constrainToInterval
 
 log = newLogger(__name__)
 
@@ -76,6 +77,9 @@ class MyApp(ShowBase):
     def movePlayerTask(self, task):  # pylint: disable=unused-argument
         dt = self.globalClock.getDt()
 
+        # TODO: Blah blah magic numbers bad. But actually though, can we put
+        # all these in a config file?
+
         # In arbitrary units of length per second.
         forwardSpeed  = 20
         sidewaysSpeed = 15
@@ -110,12 +114,41 @@ class MyApp(ShowBase):
         return Task.cont
 
     def controlCamera(self, task):  # pylint: disable=unused-argument
-        # TODO: Actually control the camera.
-        self.win.movePointer(
-            0,
-            self.win.getXSize() / 2,
-            self.win.getYSize() / 2,
-        )
+        # Degrees per pixel
+        mouseGain = 0.25
+
+        mouseData = self.win.getPointer(0)
+        mouseX = mouseData.getX()
+        mouseY = mouseData.getY()
+
+        centerX = self.win.getXSize() / 2
+        centerY = self.win.getYSize() / 2
+
+        # If our window doesn't have the focus, then this call will fail. In
+        # that case, don't move the camera based on the mouse because we're
+        # just going to re-apply the same mouse motion on the next frame, so
+        # that would cause the camera to go spinning wildly out of control.
+        if self.win.movePointer(0, centerX, centerY):
+            # I don't know why these negative signs work but they stop the
+            # people being upside-down.
+            deltaHeading = (mouseX - centerX) * -mouseGain
+            deltaPitch   = (mouseY - centerY) * -mouseGain
+
+            # For heading, just adjust by the appropriate amount.
+            self.playerNode.setHpr(self.playerNode, deltaHeading, 0, 0)
+
+            # For pitch, we need to be more careful. If we just call setHpr to
+            # adjust the pitch, then Panda3D will apply the full rotation,
+            # which means you can wind up facing backwards. But if we then call
+            # getP() to get the pitch, it will still return a value between -90
+            # and 90, which means we can't fix it up after the fact. Instead,
+            # add the delta to the pitch outside of Panda3D, so that we can
+            # detect and fix the case where the player has tried to look too
+            # high or low (by capping them to just under 90 degrees in either
+            # direction).
+            newPitch = self.playerHeadNode.getP() + deltaPitch
+            newPitch = constrainToInterval(newPitch, -89, 89)
+            self.playerHeadNode.setP(newPitch)
 
         return Task.cont
 
