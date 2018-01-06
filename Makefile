@@ -15,7 +15,7 @@ smush: Makefile $(BUILDFILES)/requirements.txt
 	virtualenv "-p$(PYTHON)" $(VIRTUALENV)
 	bash -c 'source $(VIRTUALENV)/bin/activate; pip install -r $(BUILDFILES)/requirements.txt'
 
-# NOTE: In WaRTS, we also needed to do this as part of "make smush"; it was
+# NOTE: In WaRTS, we also needed to do this as part of "make warts"; it was
 # necessary so that you can import certain panda3d modules. However, now that
 # Panda3D has proper virtualenv support, I'm hoping it won't be necessary. So
 # comment it out until/unless we find we need it.
