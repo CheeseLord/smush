@@ -17,6 +17,12 @@ class MyApp(ShowBase):
         self.scene.setScale(0.25, 0.25, 0.25)
         self.scene.setPos(-8, 42, 0)
 
+        self.playerNode = self.render.attachNewNode("Player")
+        self.playerHeadNode = self.playerNode.attachNewNode("PlayerHead")
+        self.playerHeadNode.setPos(0, 0, 1)
+        self.camera.reparentTo(self.playerHeadNode)
+        self.disableMouse()
+
 if __name__ == "__main__":
     main()
 
