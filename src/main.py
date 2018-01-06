@@ -1,3 +1,5 @@
+import sys
+
 from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
 
@@ -56,6 +58,9 @@ class MyApp(ShowBase):
             # WaRTS had this line, but it seems a little sketchy to me...
             # shouldn't we like note the modifier or something?
             # self.accept("shift-%s" % key, pushKey, [key, True])
+
+        # Provide a way to exit even when we make the window fullscreen.
+        self.accept('control-q', sys.exit)
 
         # Camera toggle.
         # self.accept("f3",       self.toggleCameraStyle, [])
