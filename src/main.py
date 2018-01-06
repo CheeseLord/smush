@@ -58,7 +58,7 @@ class MyApp(ShowBase):
         self.taskMgr.add(self.controlCamera, "camera-task")
 
         self.setupEventHandlers()
-        self.taskMgr.add(self.updatePlayerPosTask, "UpdatePlayerPosTask")
+        self.taskMgr.add(self.movePlayerTask, "MovePlayerTask")
 
     def setupEventHandlers(self):
         # Provide a way to exit even when we make the window fullscreen.
@@ -73,12 +73,16 @@ class MyApp(ShowBase):
 
     # We don't use task, but we can't remove it because the function signature
     # is from Panda3D.
-    def updatePlayerPosTask(self, task):  # pylint: disable=unused-argument
+    def movePlayerTask(self, task):  # pylint: disable=unused-argument
         dt = self.globalClock.getDt()
 
+        # In arbitrary units of length per second.
         forwardSpeed  = 20
         sidewaysSpeed = 15
         backwardSpeed = 10
+
+        # Degrees per second.
+        rotateSpeed   = 90
 
         # See:
         #     https://www.panda3d.org/manual/index.php/Keyboard_Support
@@ -87,6 +91,8 @@ class MyApp(ShowBase):
         moveLeft  = self.mouseWatcherNode.is_button_down("a")
         moveRight = self.mouseWatcherNode.is_button_down("d")
         moveBack  = self.mouseWatcherNode.is_button_down("s")
+        turnLeft  = self.mouseWatcherNode.is_button_down("q")
+        turnRight = self.mouseWatcherNode.is_button_down("e")
 
         rightDelta = (moveRight - moveLeft) * sidewaysSpeed * dt
         fwdDelta = 0
@@ -95,7 +101,11 @@ class MyApp(ShowBase):
         elif moveBack and not moveFwd:
             fwdDelta = -backwardSpeed * dt
 
+        # x is sideways and y is forward. A positive rotation is to the left.
+        rotateAmt = (turnLeft - turnRight) * rotateSpeed * dt
+
         self.playerNode.setPos(self.playerNode, rightDelta, fwdDelta, 0)
+        self.playerNode.setHpr(self.playerNode, rotateAmt, 0, 0)
 
         return Task.cont
 
