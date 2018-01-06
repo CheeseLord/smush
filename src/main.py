@@ -113,7 +113,11 @@ class MyApp(ShowBase):
 
     def controlCamera(self, task):  # pylint: disable=unused-argument
         # TODO: Actually control the camera.
-        self.win.movePointer(0, 100, 100)
+        self.win.movePointer(
+            0,
+            self.win.getXSize() / 2,
+            self.win.getYSize() / 2,
+        )
 
         return Task.cont
 
