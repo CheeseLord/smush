@@ -4,9 +4,18 @@ from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
 from panda3d.core import WindowProperties  # pylint: disable=no-name-in-module
 
+from src.logconfig import newLogger
+
+log = newLogger(__name__)
+
 def main():
+    log.info("Begin.")
+
     app = MyApp()
     app.run()
+
+    # Not reached; I think Panda3D calls sys.exit when you close the window.
+    log.info("End.")
 
 class MyApp(ShowBase):
     def __init__(self):
