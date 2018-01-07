@@ -134,6 +134,12 @@ class MyApp(ShowBase):
             deltaHeading = (mouseX - centerX) * -mouseGain
             deltaPitch   = (mouseY - centerY) * -mouseGain
 
+            # Note that the heading change is applied to the playerNode, while
+            # the pitch is applied to the playerHeadNode. You can use the mouse
+            # to turn from side to side, which affects your movement, but there
+            # is no way to tilt the player upward or downward because you're
+            # always standing upright.
+
             # For heading, just adjust by the appropriate amount.
             self.playerNode.setHpr(self.playerNode, deltaHeading, 0, 0)
 
