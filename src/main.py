@@ -179,6 +179,7 @@ class MyApp(ShowBase):
         ball.setScale(0.02)
         ball.setPos(self.playerNode.getPos() + self.playerHeadNode.getPos())
         ball.setHpr(self.playerNode.getHpr())
+        ball.setY(ball, 70)
 
 
 if __name__ == "__main__":
