@@ -91,6 +91,9 @@ class MyApp(ShowBase):
         # Provide a way to exit even when we make the window fullscreen.
         self.accept('control-q', sys.exit)
 
+        # Handle the mouse.
+        self.accept("mouse1", self.clicked, [])
+
         # Camera toggle.
         # self.accept("f3",       self.toggleCameraStyle, [])
 
@@ -183,6 +186,13 @@ class MyApp(ShowBase):
             self.playerHeadNode.setP(newPitch)
 
         return Task.cont
+
+    def clicked(self):
+        ball = self.loader.loadModel("smiley")
+        ball.reparentTo(self.render)
+        ball.setScale(0.02)
+        ball.setPos(self.playerNode.getPos() + self.playerHeadNode.getPos())
+        ball.setHpr(self.playerNode.getHpr())
 
 
 if __name__ == "__main__":
