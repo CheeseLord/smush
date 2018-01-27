@@ -9,7 +9,10 @@ cd "$MY_DIR"/..
 
 # TODO: Make this idempotent. If link already exists and has correct target,
 # then silently pass.
-if ! ln -s ../../hooks/pre-commit .git/hooks/pre-commit; then
+if ! (
+	ln -s ../../hooks/pre-commit .git/hooks/pre-commit &&
+        echo -e '\nCreated pre-commit hook'
+    ); then
     echo
     echo "** Failed to create link. Aborting. **"
     exit 1

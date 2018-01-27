@@ -2,8 +2,11 @@ import sys
 
 from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
-from panda3d.core import WindowProperties, CollisionNode, CollisionSphere
-
+from panda3d.core import CollisionHandlerPusher
+from panda3d.core import CollisionNode
+from panda3d.core import CollisionSphere
+from panda3d.core import CollisionTraverser
+from panda3d.core import WindowProperties
 from src.logconfig import newLogger
 from src.utils import constrainToInterval
 
@@ -37,6 +40,10 @@ class MyApp(ShowBase):
         # self.globalClock everywhere else.
         self.globalClock = globalClock # pylint: disable=undefined-variable
 
+        # Add collision handler
+        self.cTrav = CollisionTraverser()
+        pusher = CollisionHandlerPusher()
+
         # Load the environment model.
         self.scene = self.loader.loadModel("models/environment")
         self.scene.reparentTo(self.render)
@@ -61,7 +68,14 @@ class MyApp(ShowBase):
         self.playerNode = self.render.attachNewNode("Player")
         self.playerHeadNode = self.playerNode.attachNewNode("PlayerHead")
         self.playerHeadNode.setPos(0, 0, 1)
+        self.playerCollider = self.playerNode.attachNewNode(
+            CollisionNode("playerCollider")
+        )
+        self.playerCollider.node().addSolid(CollisionSphere(0,0,1,1))
         self.camera.reparentTo(self.playerHeadNode)
+        pusher.addCollider(self.playerCollider, self.smileyCollide)
+        pusher.addCollider(self.playerCollider, self.camera, self.drive.node())
+        self.cTrav.addCollider(self.playerCollider, pusher)
 
         # Hide the mouse.
         self.disableMouse()
