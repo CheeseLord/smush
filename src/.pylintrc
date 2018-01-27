@@ -337,7 +337,12 @@ ignore-mixin-members=yes
 # (useful for modules/projects where namespaces are manipulated during runtime
 # and thus existing member attributes cannot be deduced by static analysis. It
 # supports qualified module names, as well as Unix pattern matching.
-ignored-modules=panda3d
+#
+# Panda3D seems to do this a lot, so ignore their modules. It seems like we
+# _ought_ to be able to say "ignored-modules=panda3d.*", but for some reason I
+# couldn't get that to work (pylint was still giving the warnings). So instead,
+# just list here all the modules that we've seen cause problems.
+ignored-modules=panda3d.core
 
 # List of classes names for which member attributes should not be checked
 # (useful for classes with attributes dynamically set). This supports can work

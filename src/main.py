@@ -2,7 +2,7 @@ import sys
 
 from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
-from panda3d.core import WindowProperties  # pylint: disable=no-name-in-module
+from panda3d.core import WindowProperties, CollisionNode, CollisionSphere
 
 from src.logconfig import newLogger
 from src.utils import constrainToInterval
@@ -45,6 +45,18 @@ class MyApp(ShowBase):
         # Something something magic numbers bad something something.
         self.scene.setScale(0.25, 0.25, 0.25)
         self.scene.setPos(-8, 42, 0)
+
+        # Bring in a smily model, with a collision geometry. More or less
+        # stolen from one of the examples on this page:
+        #     https://www.panda3d.org/forums/viewtopic.php?t=7918
+        self.smiley = self.loader.loadModel("smiley")
+        self.smileyCollide = self.smiley.attachNewNode(
+            CollisionNode("SmileyCollide")
+        )
+        # TODO: Why .node()? Can't add a solid to a NodePath?
+        self.smileyCollide.node().addSolid(CollisionSphere(0, 0, 0, 1))
+        self.smiley.reparentTo(self.render)
+        self.smiley.setPos(-5, 10, 1)
 
         self.playerNode = self.render.attachNewNode("Player")
         self.playerHeadNode = self.playerNode.attachNewNode("PlayerHead")
