@@ -74,7 +74,8 @@ class MyApp(ShowBase):
         self.playerCollider.node().addSolid(CollisionSphere(0,0,1,1))
         self.camera.reparentTo(self.playerHeadNode)
         pusher.addCollider(self.playerCollider, self.smileyCollide)
-        pusher.addCollider(self.playerCollider, self.camera, self.drive.node())
+        pusher.addCollider(self.playerCollider, self.playerNode,
+                           self.drive.node())
         self.cTrav.addCollider(self.playerCollider, pusher)
 
         # Hide the mouse.
