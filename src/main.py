@@ -103,15 +103,23 @@ class MyApp(ShowBase):
         self.playerGroundCollider.node().addSolid(
             CollisionRay(0, 0, PLAYER_HEIGHT, 0, 0, -PLAYER_HEIGHT)
         )
+        # Prevent other "from" objects from being collision-checked into the
+        # ray, since most (all?) of those tests aren't supported (leading to
+        # warnings) and the collision checks wouldn't be useful anyway.
+        self.playerGroundCollider.node().setIntoCollideMask(0)
 
         pusher = CollisionHandlerPusher()
-        pusher.addCollider(self.playerCollider, self.smileyCollide)
+        # FIXME: What did this line do? I don't think it's helpful...
+        # pusher.addCollider(self.playerCollider, self.smileyCollide)
         pusher.addCollider(self.playerCollider, self.playerNode,
                            self.drive.node())
         self.cTrav.addCollider(self.playerCollider, pusher)
 
         lifter = CollisionHandlerFloor()
-        lifter.addCollider(self.playerGroundCollider, self.playerNode)
+        # lifter.addCollider(self.playerGroundCollider, self.playerNode)
+        lifter.addCollider(self.playerGroundCollider, self.playerNode,
+                           self.drive.node())
+        # If you uncomment this line, the player floats up into the sky.
         # self.cTrav.addCollider(self.playerGroundCollider, lifter)
 
         # Hide the mouse.
