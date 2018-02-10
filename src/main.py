@@ -73,6 +73,14 @@ class MyApp(ShowBase):
         )
         self.playerCollider.node().addSolid(CollisionSphere(0,0,1,1))
         self.camera.reparentTo(self.playerHeadNode)
+        # Move the camera's near plane closer so that when the player butts
+        # their head against a wall, they don't see through it. In general,
+        # this distance should be close enough that the near plane stays within
+        # the player's hitbox (even as the player's head rotates in place). For
+        # more on camera/lens geometry in Panda3D, see:
+        #     https://www.panda3d.org/manual/index.php/Lenses_and_Field_of_View
+        self.camLens.setNear(0.1)
+
         pusher.addCollider(self.playerCollider, self.smileyCollide)
         pusher.addCollider(self.playerCollider, self.playerNode,
                            self.drive.node())
