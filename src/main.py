@@ -2,8 +2,10 @@ import sys
 
 from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
+from panda3d.core import CollisionHandlerFloor
 from panda3d.core import CollisionHandlerPusher
 from panda3d.core import CollisionNode
+from panda3d.core import CollisionRay
 from panda3d.core import CollisionSphere
 from panda3d.core import CollisionTraverser
 from panda3d.core import WindowProperties
@@ -45,7 +47,6 @@ class MyApp(ShowBase):
 
         # Add collision handler
         self.cTrav = CollisionTraverser()
-        pusher = CollisionHandlerPusher()
 
         # Load the environment model.
         self.scene = self.loader.loadModel("models/environment")
@@ -66,7 +67,9 @@ class MyApp(ShowBase):
         # TODO: Why .node()? Can't add a solid to a NodePath?
         self.smileyCollide.node().addSolid(CollisionSphere(0, 0, 0, 1))
         self.smiley.reparentTo(self.render)
-        self.smiley.setPos(-5, 10, 1)
+        # FIXME: Temporarily lift smiley up a bit so the player will more
+        # consistently be pushed underground.
+        self.smiley.setPos(-5, 10, 1.05)
 
         # playerNode is at the player's feet, not their center of mass.
         self.playerNode = self.render.attachNewNode("Player")
@@ -94,10 +97,22 @@ class MyApp(ShowBase):
             CollisionSphere(0, 0, 0.5 * PLAYER_HEIGHT, 0.5 * PLAYER_HEIGHT)
         )
 
+        self.playerGroundCollider = self.playerNode.attachNewNode(
+            CollisionNode("playerGroundCollider")
+        )
+        self.playerGroundCollider.node().addSolid(
+            CollisionRay(0, 0, PLAYER_HEIGHT, 0, 0, -PLAYER_HEIGHT)
+        )
+
+        pusher = CollisionHandlerPusher()
         pusher.addCollider(self.playerCollider, self.smileyCollide)
         pusher.addCollider(self.playerCollider, self.playerNode,
                            self.drive.node())
         self.cTrav.addCollider(self.playerCollider, pusher)
+
+        lifter = CollisionHandlerFloor()
+        lifter.addCollider(self.playerGroundCollider, self.playerNode)
+        # self.cTrav.addCollider(self.playerGroundCollider, lifter)
 
         # Hide the mouse.
         self.disableMouse()
