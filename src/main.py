@@ -12,6 +12,8 @@ from src.utils import constrainToInterval
 
 log = newLogger(__name__)
 
+FRAMES_NEEDED_TO_WARP = 2
+
 def main():
     log.info("Begin.")
 
@@ -93,6 +95,10 @@ class MyApp(ShowBase):
         self.win.requestProperties(props)
         self.taskMgr.add(self.controlCamera, "camera-task")
 
+        # How many previous frames have we successfully warped the mouse? Only
+        # tracked up to FRAMES_NEEDED_TO_WARP.
+        self.successfulMouseWarps = 0
+
         self.setupEventHandlers()
         self.taskMgr.add(self.movePlayerTask, "MovePlayerTask")
 
@@ -166,7 +172,16 @@ class MyApp(ShowBase):
         # that case, don't move the camera based on the mouse because we're
         # just going to re-apply the same mouse motion on the next frame, so
         # that would cause the camera to go spinning wildly out of control.
-        if self.win.movePointer(0, centerX, centerY):
+        mouseWarpSucceeded = self.win.movePointer(0, centerX, centerY)
+
+        # Also don't move the camera if, since the last failed attempt to warp
+        # the mouse, we have not had at least FRAMES_NEEDED_TO_WARP successful
+        # warps. In that case, we have not yet finished resolving the first
+        # mouse warp since the mouse last entered the window, which means that
+        # the mouse's current position can't be trusted to be a meaningful
+        # relative value.
+        if mouseWarpSucceeded and \
+                self.successfulMouseWarps >= FRAMES_NEEDED_TO_WARP:
             # I don't know why these negative signs work but they stop the
             # people being upside-down.
             deltaHeading = (mouseX - centerX) * -mouseGain
@@ -193,6 +208,13 @@ class MyApp(ShowBase):
             newPitch = self.playerHeadNode.getP() + deltaPitch
             newPitch = constrainToInterval(newPitch, -89, 89)
             self.playerHeadNode.setP(newPitch)
+
+        if mouseWarpSucceeded:
+            # Prevent this value from growing out of control, on principle.
+            if self.successfulMouseWarps < FRAMES_NEEDED_TO_WARP:
+                self.successfulMouseWarps += 1
+        else:
+            self.successfulMouseWarps = 0
 
         return Task.cont
 
