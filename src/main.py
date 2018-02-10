@@ -13,6 +13,7 @@ from src.utils import constrainToInterval
 log = newLogger(__name__)
 
 FRAMES_NEEDED_TO_WARP = 2
+PLAYER_HEIGHT = 2.0
 
 def main():
     log.info("Begin.")
@@ -67,21 +68,31 @@ class MyApp(ShowBase):
         self.smiley.reparentTo(self.render)
         self.smiley.setPos(-5, 10, 1)
 
+        # playerNode is at the player's feet, not their center of mass.
         self.playerNode = self.render.attachNewNode("Player")
+        self.playerNode.setPos(0, 0, 0)
         self.playerHeadNode = self.playerNode.attachNewNode("PlayerHead")
-        self.playerHeadNode.setPos(0, 0, 1)
+        # Put the player's head a little below the actual top of the player so
+        # that if you're standing right under an object, the object is still
+        # within your camera's viewing frustum.
+        self.playerHeadNode.setPos(0, 0, PLAYER_HEIGHT - 0.2)
+        self.camera.reparentTo(self.playerHeadNode)
+        # Move the camera's near plane closer than the default (1) so that when
+        # the player butts their head against a wall, they don't see through
+        # it. In general, this distance should be close enough that the near
+        # plane stays within the player's hitbox (even as the player's head
+        # rotates in place). For more on camera/lens geometry in Panda3D, see:
+        #     https://www.panda3d.org/manual/index.php/Lenses_and_Field_of_View
+        self.camLens.setNear(0.1)
+
+        # For colliding the player with walls and other such obstacles to
+        # horizontal motion.
         self.playerCollider = self.playerNode.attachNewNode(
             CollisionNode("playerCollider")
         )
-        self.playerCollider.node().addSolid(CollisionSphere(0,0,1,1))
-        self.camera.reparentTo(self.playerHeadNode)
-        # Move the camera's near plane closer so that when the player butts
-        # their head against a wall, they don't see through it. In general,
-        # this distance should be close enough that the near plane stays within
-        # the player's hitbox (even as the player's head rotates in place). For
-        # more on camera/lens geometry in Panda3D, see:
-        #     https://www.panda3d.org/manual/index.php/Lenses_and_Field_of_View
-        self.camLens.setNear(0.1)
+        self.playerCollider.node().addSolid(
+            CollisionSphere(0, 0, 0.5 * PLAYER_HEIGHT, 0.5 * PLAYER_HEIGHT)
+        )
 
         pusher.addCollider(self.playerCollider, self.smileyCollide)
         pusher.addCollider(self.playerCollider, self.playerNode,
