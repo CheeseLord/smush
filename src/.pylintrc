@@ -342,7 +342,7 @@ ignore-mixin-members=yes
 # _ought_ to be able to say "ignored-modules=panda3d.*", but for some reason I
 # couldn't get that to work (pylint was still giving the warnings). So instead,
 # just list here all the modules that we've seen cause problems.
-ignored-modules=panda3d.core
+ignored-modules=panda3d.core,panda3d.physics
 
 # List of classes names for which member attributes should not be checked
 # (useful for classes with attributes dynamically set). This supports can work
