@@ -8,7 +8,9 @@ from panda3d.core import CollisionNode
 from panda3d.core import CollisionRay
 from panda3d.core import CollisionSphere
 from panda3d.core import CollisionTraverser
+from panda3d.core import NodePath
 from panda3d.core import WindowProperties
+from panda3d.physics import ActorNode, ForceNode, LinearVectorForce
 from src.logconfig import newLogger
 from src.utils import constrainToInterval
 
@@ -47,6 +49,13 @@ class MyApp(ShowBase):
 
         # Add collision handler
         self.cTrav = CollisionTraverser()
+
+        # Start the physics (yes, with the particle engine).
+        self.enableParticles()
+        gravityNode = ForceNode("world-forces")
+        gravityForce = LinearVectorForce(0, 0, -9.81)
+        gravityNode.addForce(gravityForce)
+        self.physicsMgr.addLinearForce(gravityForce)
 
         # Load the environment model.
         self.scene = self.loader.loadModel("models/environment")
@@ -245,8 +254,14 @@ class MyApp(ShowBase):
         return Task.cont
 
     def clicked(self):
+        node = NodePath("PhysicsNode")
+        node.reparentTo(self.render)
+        an = ActorNode("smileyPhysics")
+        anp = node.attachNewNode(an)
+        self.physicsMgr.attachPhysicalNode(an)
+
         ball = self.loader.loadModel("smiley")
-        ball.reparentTo(self.render)
+        ball.reparentTo(anp)
         ball.setScale(0.02)
         ball.setPos(self.playerNode.getPos() + self.playerHeadNode.getPos())
         ball.setHpr(self.playerNode.getHpr())
