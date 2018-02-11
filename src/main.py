@@ -115,11 +115,26 @@ class MyApp(ShowBase):
                            self.drive.node())
         self.cTrav.addCollider(self.playerCollider, pusher)
 
+        # Add a CollisionHandlerFloor to keep the player from falling through
+        # the ground. Note that this doesn't involve the physics engine; it
+        # just moves the player up (or down?) in order to resolve collisions
+        # between them and other collision solids (presumably the ground).
         lifter = CollisionHandlerFloor()
+        # FIXME: I think this next line can be deleted?
         # lifter.addCollider(self.playerGroundCollider, self.playerNode)
         lifter.addCollider(self.playerGroundCollider, self.playerNode,
                            self.drive.node())
-        # If you uncomment this line, the player floats up into the sky.
+        # FIXME: If you uncomment this next line, the player floats up into the
+        # sky. The problem is that the playerGroundCollider (the ray) is
+        # detecting a collision with the playerCollider (the player's collision
+        # sphere), so trying to move the player up, but then the sphere and ray
+        # both move up so the whole thing just keeps going indefinitely.
+        # Probably the fix is to set the from/into collidemasks so that these
+        # two collision nodes don't try to collide with each other. But how to
+        # do that without risking reusing the bits that Panda is already using
+        # for their collide masks? Do we just need to set the collidemasks on
+        # everything to prevent such issues?
+        #
         # self.cTrav.addCollider(self.playerGroundCollider, lifter)
 
         # Hide the mouse.
