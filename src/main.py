@@ -10,12 +10,14 @@ from panda3d.core import CollisionPlane
 from panda3d.core import CollisionRay
 from panda3d.core import CollisionSphere
 from panda3d.core import CollisionTraverser
-from panda3d.core import NodePath
 from panda3d.core import Plane
 from panda3d.core import Point3
 from panda3d.core import Vec3
 from panda3d.core import WindowProperties
-from panda3d.physics import ActorNode, ForceNode, LinearVectorForce
+from panda3d.physics import ActorNode
+from panda3d.physics import ForceNode
+from panda3d.physics import LinearVectorForce
+from panda3d.physics import PhysicsCollisionHandler
 from src.logconfig import newLogger
 from src.utils import constrainToInterval
 
@@ -31,6 +33,7 @@ COLLIDE_MASK_INTO_NONE   = BitMask32(0x0)
 COLLIDE_MASK_INTO_FLOOR  = BitMask32(0x1)
 COLLIDE_MASK_INTO_WALL   = BitMask32(0x2)
 COLLIDE_MASK_INTO_PLAYER = BitMask32(0x4)
+COLLIDE_MASK_INTO_ENTITY = BitMask32(0x8) # For misc entities flying around
 
 def main():
     log.info("Begin.")
@@ -158,6 +161,10 @@ class MyApp(ShowBase):
         self.groundCollider.node().addSolid(
             CollisionPlane(Plane(Vec3(0, 0, 1), Point3(0, 0, 0)))
         )
+
+        # Used to handle collisions of physics-affected objects (currently just
+        # bullets) with the ground.
+        self.groundPhysicsPusher = PhysicsCollisionHandler()
 
         # Add a CollisionHandlerFloor to keep the player from falling through
         # the ground. Note that this doesn't involve the physics engine; it
@@ -299,22 +306,33 @@ class MyApp(ShowBase):
         return Task.cont
 
     def clicked(self):
-        node = NodePath("PhysicsNode")
-        node.reparentTo(self.render)
         # NOTE: This kind of actor has nothing to do with the graphics kind.
-        actor = ActorNode("smileyPhysics")
-        physics = node.attachNewNode(actor)
-        self.physicsMgr.attachPhysicalNode(actor)
+        physicsNP = self.render.attachNewNode(ActorNode("smileyPhysics"))
+        self.physicsMgr.attachPhysicalNode(physicsNP.node())
 
         # TODO: Pick a relevant direction.
-        actor.getPhysicsObject().setVelocity(0, 0, 30)
+        physicsNP.node().getPhysicsObject().setVelocity(0, 0, 30)
 
         ball = self.loader.loadModel("smiley")
-        ball.reparentTo(physics)
+        ball.reparentTo(physicsNP)
         ball.setScale(0.02)
-        ball.setPos(self.playerNode.getPos() + self.playerHeadNode.getPos())
         ball.setHpr(self.playerNode.getHpr())
-        ball.setY(ball, 70)
+        physicsNP.setPos(self.playerNode.getPos() +
+                         self.playerHeadNode.getPos())
+        physicsNP.setY(ball, 70)
+
+        # Also add collision geometry to the bullet
+        bulletCollider = physicsNP.attachNewNode(
+            CollisionNode("BulletCollider")
+        )
+        bulletCollider.node().setIntoCollideMask(COLLIDE_MASK_INTO_ENTITY)
+        bulletCollider.node().setFromCollideMask(COLLIDE_MASK_INTO_FLOOR |
+                                                 COLLIDE_MASK_INTO_WALL)
+        bulletCollider.node().addSolid(CollisionSphere(0, 0, 0, 0.02))
+
+        # And handle its collisions with the ground.
+        self.groundPhysicsPusher.addCollider(bulletCollider, physicsNP)
+        self.cTrav.addCollider(bulletCollider, self.groundPhysicsPusher)
 
 
 if __name__ == "__main__":
