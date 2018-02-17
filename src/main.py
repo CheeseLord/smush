@@ -264,12 +264,16 @@ class MyApp(ShowBase):
     def clicked(self):
         node = NodePath("PhysicsNode")
         node.reparentTo(self.render)
-        an = ActorNode("smileyPhysics")
-        anp = node.attachNewNode(an)
-        self.physicsMgr.attachPhysicalNode(an)
+        # NOTE: This kind of actor has nothing to do with the graphics kind.
+        actor = ActorNode("smileyPhysics")
+        physics = node.attachNewNode(actor)
+        self.physicsMgr.attachPhysicalNode(actor)
+
+        # TODO: Pick a relevant direction.
+        actor.getPhysicsObject().setVelocity(0, 0, 30)
 
         ball = self.loader.loadModel("smiley")
-        ball.reparentTo(anp)
+        ball.reparentTo(physics)
         ball.setScale(0.02)
         ball.setPos(self.playerNode.getPos() + self.playerHeadNode.getPos())
         ball.setHpr(self.playerNode.getHpr())
