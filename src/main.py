@@ -6,9 +6,13 @@ from panda3d.core import BitMask32
 from panda3d.core import CollisionHandlerFloor
 from panda3d.core import CollisionHandlerPusher
 from panda3d.core import CollisionNode
+from panda3d.core import CollisionPlane
 from panda3d.core import CollisionRay
 from panda3d.core import CollisionSphere
 from panda3d.core import CollisionTraverser
+from panda3d.core import Plane
+from panda3d.core import Point3
+from panda3d.core import Vec3
 from panda3d.core import WindowProperties
 from src.logconfig import newLogger
 from src.utils import constrainToInterval
@@ -135,6 +139,19 @@ class MyApp(ShowBase):
                            self.drive.node())
         self.cTrav.addCollider(self.playerCollider, pusher)
 
+        # Add collision geometry for the ground. For now, it's just an infinite
+        # plane; eventually we should figure out how to actually match it with
+        # the environment model.
+        self.groundCollider = self.render.attachNewNode(
+            CollisionNode("groundCollider")
+        )
+        self.groundCollider.node().setIntoCollideMask(
+            COLLIDE_MASK_INTO_FLOOR
+        )
+        self.groundCollider.node().addSolid(
+            CollisionPlane(Plane(Vec3(0, 0, 1), Point3(0, 0, 0)))
+        )
+
         # Add a CollisionHandlerFloor to keep the player from falling through
         # the ground. Note that this doesn't involve the physics engine; it
         # just moves the player up (or down?) in order to resolve collisions
@@ -155,7 +172,7 @@ class MyApp(ShowBase):
         # for their collide masks? Do we just need to set the collidemasks on
         # everything to prevent such issues?
         #
-        # self.cTrav.addCollider(self.playerGroundCollider, lifter)
+        self.cTrav.addCollider(self.playerGroundCollider, lifter)
 
         # Hide the mouse.
         self.disableMouse()
