@@ -92,9 +92,9 @@ class MyApp(ShowBase):
         # TODO: Why .node()? Can't add a solid to a NodePath?
         self.smileyCollide.node().addSolid(CollisionSphere(0, 0, 0, 1))
         self.smiley.reparentTo(self.render)
-        # FIXME: Temporarily lift smiley up a bit so the player will more
-        # consistently be pushed underground.
-        self.smiley.setPos(-5, 10, 1.05)
+        # Lift the smiley up some so the player will more consistently be
+        # pushed underground.
+        self.smiley.setPos(-5, 10, 1.25)
 
         # playerNode is at the player's feet, not their center of mass.
         self.playerNode = self.render.attachNewNode("Player")
@@ -142,8 +142,6 @@ class MyApp(ShowBase):
         )
 
         pusher = CollisionHandlerPusher()
-        # FIXME: What did this line do? I don't think it's helpful...
-        # pusher.addCollider(self.playerCollider, self.smileyCollide)
         pusher.addCollider(self.playerCollider, self.playerNode,
                            self.drive.node())
         self.cTrav.addCollider(self.playerCollider, pusher)
@@ -166,21 +164,8 @@ class MyApp(ShowBase):
         # just moves the player up (or down?) in order to resolve collisions
         # between them and other collision solids (presumably the ground).
         lifter = CollisionHandlerFloor()
-        # FIXME: I think this next line can be deleted?
-        # lifter.addCollider(self.playerGroundCollider, self.playerNode)
         lifter.addCollider(self.playerGroundCollider, self.playerNode,
                            self.drive.node())
-        # FIXME: If you uncomment this next line, the player floats up into the
-        # sky. The problem is that the playerGroundCollider (the ray) is
-        # detecting a collision with the playerCollider (the player's collision
-        # sphere), so trying to move the player up, but then the sphere and ray
-        # both move up so the whole thing just keeps going indefinitely.
-        # Probably the fix is to set the from/into collidemasks so that these
-        # two collision nodes don't try to collide with each other. But how to
-        # do that without risking reusing the bits that Panda is already using
-        # for their collide masks? Do we just need to set the collidemasks on
-        # everything to prevent such issues?
-        #
         self.cTrav.addCollider(self.playerGroundCollider, lifter)
 
         # Hide the mouse.
