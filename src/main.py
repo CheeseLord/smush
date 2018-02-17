@@ -2,6 +2,7 @@ import sys
 
 from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
+from panda3d.core import BitMask32
 from panda3d.core import CollisionHandlerFloor
 from panda3d.core import CollisionHandlerPusher
 from panda3d.core import CollisionNode
@@ -16,6 +17,14 @@ log = newLogger(__name__)
 
 FRAMES_NEEDED_TO_WARP = 2
 PLAYER_HEIGHT = 2.0
+
+# Bitmasks for the "into" colliders
+# TODO: Remove "INTO_" from these names? It makes them kind of needlessly long,
+# especially since we don't have any COLLIDE_MASK_FROMs...
+COLLIDE_MASK_INTO_NONE   = BitMask32(0x0)
+COLLIDE_MASK_INTO_FLOOR  = BitMask32(0x1)
+COLLIDE_MASK_INTO_WALL   = BitMask32(0x2)
+COLLIDE_MASK_INTO_PLAYER = BitMask32(0x4)
 
 def main():
     log.info("Begin.")
@@ -64,6 +73,9 @@ class MyApp(ShowBase):
         self.smileyCollide = self.smiley.attachNewNode(
             CollisionNode("SmileyCollide")
         )
+        # The smiley is logically a wall, so set its into collision mask as
+        # such.
+        self.smileyCollide.node().setIntoCollideMask(COLLIDE_MASK_INTO_WALL)
         # TODO: Why .node()? Can't add a solid to a NodePath?
         self.smileyCollide.node().addSolid(CollisionSphere(0, 0, 0, 1))
         self.smiley.reparentTo(self.render)
@@ -93,6 +105,9 @@ class MyApp(ShowBase):
         self.playerCollider = self.playerNode.attachNewNode(
             CollisionNode("playerCollider")
         )
+        self.playerCollider.node().setIntoCollideMask(COLLIDE_MASK_INTO_PLAYER)
+        self.playerCollider.node().setFromCollideMask(COLLIDE_MASK_INTO_FLOOR |
+                                                      COLLIDE_MASK_INTO_WALL)
         self.playerCollider.node().addSolid(
             CollisionSphere(0, 0, 0.5 * PLAYER_HEIGHT, 0.5 * PLAYER_HEIGHT)
         )
@@ -100,13 +115,18 @@ class MyApp(ShowBase):
         self.playerGroundCollider = self.playerNode.attachNewNode(
             CollisionNode("playerGroundCollider")
         )
+        # Prevent all other "from" objects from being collision-checked into
+        # the ray, since most (all?) of those tests aren't supported (leading
+        # to warnings) and the collision checks wouldn't be useful anyway.
+        self.playerGroundCollider.node().setIntoCollideMask(
+            COLLIDE_MASK_INTO_NONE
+        )
+        self.playerGroundCollider.node().setFromCollideMask(
+            COLLIDE_MASK_INTO_FLOOR
+        )
         self.playerGroundCollider.node().addSolid(
             CollisionRay(0, 0, PLAYER_HEIGHT, 0, 0, -PLAYER_HEIGHT)
         )
-        # Prevent other "from" objects from being collision-checked into the
-        # ray, since most (all?) of those tests aren't supported (leading to
-        # warnings) and the collision checks wouldn't be useful anyway.
-        self.playerGroundCollider.node().setIntoCollideMask(0)
 
         pusher = CollisionHandlerPusher()
         # FIXME: What did this line do? I don't think it's helpful...
