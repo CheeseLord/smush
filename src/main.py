@@ -2,13 +2,18 @@ import sys
 
 from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
+from panda3d.core import BitMask32
 from panda3d.core import CollisionHandlerFloor
 from panda3d.core import CollisionHandlerPusher
 from panda3d.core import CollisionNode
+from panda3d.core import CollisionPlane
 from panda3d.core import CollisionRay
 from panda3d.core import CollisionSphere
 from panda3d.core import CollisionTraverser
 from panda3d.core import NodePath
+from panda3d.core import Plane
+from panda3d.core import Point3
+from panda3d.core import Vec3
 from panda3d.core import WindowProperties
 from panda3d.physics import ActorNode, ForceNode, LinearVectorForce
 from src.logconfig import newLogger
@@ -18,6 +23,14 @@ log = newLogger(__name__)
 
 FRAMES_NEEDED_TO_WARP = 2
 PLAYER_HEIGHT = 2.0
+
+# Bitmasks for the "into" colliders
+# TODO: Remove "INTO_" from these names? It makes them kind of needlessly long,
+# especially since we don't have any COLLIDE_MASK_FROMs...
+COLLIDE_MASK_INTO_NONE   = BitMask32(0x0)
+COLLIDE_MASK_INTO_FLOOR  = BitMask32(0x1)
+COLLIDE_MASK_INTO_WALL   = BitMask32(0x2)
+COLLIDE_MASK_INTO_PLAYER = BitMask32(0x4)
 
 def main():
     log.info("Begin.")
@@ -73,6 +86,9 @@ class MyApp(ShowBase):
         self.smileyCollide = self.smiley.attachNewNode(
             CollisionNode("SmileyCollide")
         )
+        # The smiley is logically a wall, so set its into collision mask as
+        # such.
+        self.smileyCollide.node().setIntoCollideMask(COLLIDE_MASK_INTO_WALL)
         # TODO: Why .node()? Can't add a solid to a NodePath?
         self.smileyCollide.node().addSolid(CollisionSphere(0, 0, 0, 1))
         self.smiley.reparentTo(self.render)
@@ -102,6 +118,9 @@ class MyApp(ShowBase):
         self.playerCollider = self.playerNode.attachNewNode(
             CollisionNode("playerCollider")
         )
+        self.playerCollider.node().setIntoCollideMask(COLLIDE_MASK_INTO_PLAYER)
+        self.playerCollider.node().setFromCollideMask(COLLIDE_MASK_INTO_FLOOR |
+                                                      COLLIDE_MASK_INTO_WALL)
         self.playerCollider.node().addSolid(
             CollisionSphere(0, 0, 0.5 * PLAYER_HEIGHT, 0.5 * PLAYER_HEIGHT)
         )
@@ -109,13 +128,18 @@ class MyApp(ShowBase):
         self.playerGroundCollider = self.playerNode.attachNewNode(
             CollisionNode("playerGroundCollider")
         )
+        # Prevent all other "from" objects from being collision-checked into
+        # the ray, since most (all?) of those tests aren't supported (leading
+        # to warnings) and the collision checks wouldn't be useful anyway.
+        self.playerGroundCollider.node().setIntoCollideMask(
+            COLLIDE_MASK_INTO_NONE
+        )
+        self.playerGroundCollider.node().setFromCollideMask(
+            COLLIDE_MASK_INTO_FLOOR
+        )
         self.playerGroundCollider.node().addSolid(
             CollisionRay(0, 0, PLAYER_HEIGHT, 0, 0, -PLAYER_HEIGHT)
         )
-        # Prevent other "from" objects from being collision-checked into the
-        # ray, since most (all?) of those tests aren't supported (leading to
-        # warnings) and the collision checks wouldn't be useful anyway.
-        self.playerGroundCollider.node().setIntoCollideMask(0)
 
         pusher = CollisionHandlerPusher()
         # FIXME: What did this line do? I don't think it's helpful...
@@ -124,12 +148,40 @@ class MyApp(ShowBase):
                            self.drive.node())
         self.cTrav.addCollider(self.playerCollider, pusher)
 
+        # Add collision geometry for the ground. For now, it's just an infinite
+        # plane; eventually we should figure out how to actually match it with
+        # the environment model.
+        self.groundCollider = self.render.attachNewNode(
+            CollisionNode("groundCollider")
+        )
+        self.groundCollider.node().setIntoCollideMask(
+            COLLIDE_MASK_INTO_FLOOR
+        )
+        self.groundCollider.node().addSolid(
+            CollisionPlane(Plane(Vec3(0, 0, 1), Point3(0, 0, 0)))
+        )
+
+        # Add a CollisionHandlerFloor to keep the player from falling through
+        # the ground. Note that this doesn't involve the physics engine; it
+        # just moves the player up (or down?) in order to resolve collisions
+        # between them and other collision solids (presumably the ground).
         lifter = CollisionHandlerFloor()
+        # FIXME: I think this next line can be deleted?
         # lifter.addCollider(self.playerGroundCollider, self.playerNode)
         lifter.addCollider(self.playerGroundCollider, self.playerNode,
                            self.drive.node())
-        # If you uncomment this line, the player floats up into the sky.
-        # self.cTrav.addCollider(self.playerGroundCollider, lifter)
+        # FIXME: If you uncomment this next line, the player floats up into the
+        # sky. The problem is that the playerGroundCollider (the ray) is
+        # detecting a collision with the playerCollider (the player's collision
+        # sphere), so trying to move the player up, but then the sphere and ray
+        # both move up so the whole thing just keeps going indefinitely.
+        # Probably the fix is to set the from/into collidemasks so that these
+        # two collision nodes don't try to collide with each other. But how to
+        # do that without risking reusing the bits that Panda is already using
+        # for their collide masks? Do we just need to set the collidemasks on
+        # everything to prevent such issues?
+        #
+        self.cTrav.addCollider(self.playerGroundCollider, lifter)
 
         # Hide the mouse.
         self.disableMouse()
