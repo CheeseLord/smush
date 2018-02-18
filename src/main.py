@@ -310,8 +310,11 @@ class MyApp(ShowBase):
         physicsNP = self.render.attachNewNode(ActorNode("smileyPhysics"))
         self.physicsMgr.attachPhysicalNode(physicsNP.node())
 
+        bulletVec = self.render.getRelativeVector(self.playerHeadNode,
+                                                  Vec3(0, 30, 0))
+
         # TODO: Pick a relevant direction.
-        physicsNP.node().getPhysicsObject().setVelocity(0, 0, 30)
+        physicsNP.node().getPhysicsObject().setVelocity(bulletVec)
 
         ball = self.loader.loadModel("smiley")
         ball.reparentTo(physicsNP)
@@ -327,7 +330,8 @@ class MyApp(ShowBase):
         )
         bulletCollider.node().setIntoCollideMask(COLLIDE_MASK_INTO_ENTITY)
         bulletCollider.node().setFromCollideMask(COLLIDE_MASK_INTO_FLOOR |
-                                                 COLLIDE_MASK_INTO_WALL)
+                                                 COLLIDE_MASK_INTO_WALL  |
+                                                 COLLIDE_MASK_INTO_ENTITY)
         bulletCollider.node().addSolid(CollisionSphere(0, 0, 0, 0.02))
 
         # And handle its collisions with the ground.
