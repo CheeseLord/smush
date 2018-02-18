@@ -319,10 +319,9 @@ class MyApp(ShowBase):
         ball = self.loader.loadModel("smiley")
         ball.reparentTo(physicsNP)
         ball.setScale(0.02)
-        ball.setHpr(self.playerNode.getHpr())
-        physicsNP.setPos(self.playerNode.getPos() +
-                         self.playerHeadNode.getPos())
-        physicsNP.setY(ball, 70)
+        physicsNP.setHpr(self.playerNode.getHpr())
+        physicsNP.setPos(self.render.getRelativePoint(self.playerHeadNode,
+                                                      Point3(0, 0, 0)))
 
         # Also add collision geometry to the bullet
         bulletCollider = physicsNP.attachNewNode(
