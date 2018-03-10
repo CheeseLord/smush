@@ -114,9 +114,8 @@ class MyApp(ShowBase):
         #     https://www.panda3d.org/manual/index.php/Lenses_and_Field_of_View
         self.camLens.setNear(0.1)
 
-        # Used to handle collisions of physics-affected objects (currently just
-        # bullets) with the ground.
-        self.groundPhysicsPusher = PhysicsCollisionHandler()
+        # Used to handle collisions between physics-affected objects.
+        self.physicsCollisionHandler = PhysicsCollisionHandler()
 
         # For colliding the player with walls and other such obstacles to
         # horizontal motion.
@@ -130,9 +129,10 @@ class MyApp(ShowBase):
             CollisionSphere(0, 0, 0.5 * PLAYER_HEIGHT, 0.5 * PLAYER_HEIGHT)
         )
 
-        self.groundPhysicsPusher.addCollider(self.playerCollider,
-                                             self.playerNP)
-        self.cTrav.addCollider(self.playerCollider, self.groundPhysicsPusher)
+        self.physicsCollisionHandler.addCollider(self.playerCollider,
+                                                 self.playerNP)
+        self.cTrav.addCollider(self.playerCollider,
+                               self.physicsCollisionHandler)
 
         # Add collision geometry for the ground. For now, it's just an infinite
         # plane; eventually we should figure out how to actually match it with
@@ -306,8 +306,8 @@ class MyApp(ShowBase):
         bulletCollider.node().addSolid(CollisionSphere(0, 0, 0, 0.02))
 
         # And handle its collisions with the ground.
-        self.groundPhysicsPusher.addCollider(bulletCollider, physicsNP)
-        self.cTrav.addCollider(bulletCollider, self.groundPhysicsPusher)
+        self.physicsCollisionHandler.addCollider(bulletCollider, physicsNP)
+        self.cTrav.addCollider(bulletCollider, self.physicsCollisionHandler)
 
 
 if __name__ == "__main__":
