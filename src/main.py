@@ -1,3 +1,4 @@
+import math
 import sys
 
 from direct.showbase.ShowBase import ShowBase
@@ -25,6 +26,9 @@ LOG_DEBUG = False
 
 FRAMES_NEEDED_TO_WARP = 2
 PLAYER_HEIGHT = 2.0
+
+# Magnitude.
+GRAVITY_ACCEL = 9.81
 
 # Bitmasks for the "into" colliders
 # TODO: Remove "INTO_" from these names? It makes them kind of needlessly long,
@@ -72,7 +76,7 @@ class MyApp(ShowBase):
         # Start the physics (yes, with the particle engine).
         self.enableParticles()
         gravityNode = ForceNode("world-forces")
-        gravityForce = LinearVectorForce(0, 0, -9.81)
+        gravityForce = LinearVectorForce(0, 0, -GRAVITY_ACCEL)
         gravityNode.addForce(gravityForce)
         self.physicsMgr.addLinearForce(gravityForce)
 
@@ -237,7 +241,9 @@ class MyApp(ShowBase):
         # how this can happen, but it has been observed.
         if jump and -0.001 <= self.playerNP.getZ() <= 0.001 and \
                 playerZVel <= 0.001:
-            playerVel += Vec3(0, 0, 5)
+            jumpHeight = 0.6
+            jumpSpeed = math.sqrt(2 * GRAVITY_ACCEL * jumpHeight)
+            playerVel += Vec3(0, 0, jumpSpeed)
 
         playerPhysicsObj.setVelocity(playerVel)
 
