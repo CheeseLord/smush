@@ -290,6 +290,7 @@ class MyApp(ShowBase):
         bulletVel = self.render.getRelativeVector(self.playerHeadNP,
                                                   Vec3(0, 30, 0))
 
+        # TODO: Also account for the player's angular velocity.
         physicsNP.node().getPhysicsObject().setVelocity(playerVel + bulletVel)
 
         ball = self.loader.loadModel("smiley")
