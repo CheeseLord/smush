@@ -15,10 +15,13 @@ from panda3d.physics import ActorNode
 from panda3d.physics import ForceNode
 from panda3d.physics import LinearVectorForce
 from panda3d.physics import PhysicsCollisionHandler
+from src.logconfig import enableDebugLogging
 from src.logconfig import newLogger
 from src.utils import constrainToInterval
 
 log = newLogger(__name__)
+
+LOG_DEBUG = False
 
 FRAMES_NEEDED_TO_WARP = 2
 PLAYER_HEIGHT = 2.0
@@ -34,6 +37,9 @@ COLLIDE_MASK_INTO_ENTITY = BitMask32(0x8) # For misc entities flying around
 
 def main():
     log.info("Begin.")
+
+    if LOG_DEBUG:
+        enableDebugLogging()
 
     app = MyApp()
     app.run()
