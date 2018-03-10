@@ -201,18 +201,22 @@ class MyApp(ShowBase):
         turnLeft  = self.mouseWatcherNode.is_button_down("q")
         turnRight = self.mouseWatcherNode.is_button_down("e")
 
-        rightDelta = (moveRight - moveLeft) * sidewaysSpeed * dt
-        fwdDelta = 0
-        if moveFwd and not moveBack:
-            fwdDelta = forwardSpeed * dt
-        elif moveBack and not moveFwd:
-            fwdDelta = -backwardSpeed * dt
-
+        # TODO: Handle rotations by setting angular velocity instead of
+        # instantaneously changing HPR.
         # x is sideways and y is forward. A positive rotation is to the left.
         rotateAmt = (turnLeft - turnRight) * rotateSpeed * dt
-
-        self.playerNP.setPos(self.playerNP, rightDelta, fwdDelta, 0)
         self.playerNP.setHpr(self.playerNP, rotateAmt, 0, 0)
+
+        rightVel = (moveRight - moveLeft) * sidewaysSpeed
+        fwdVel   = 0
+        if moveFwd and not moveBack:
+            fwdVel = forwardSpeed
+        elif moveBack and not moveFwd:
+            fwdVel = -backwardSpeed
+
+        playerVel = self.render.getRelativeVector(self.playerNP,
+                                                  Vec3(rightVel, fwdVel, 0))
+        self.playerNP.node().getPhysicsObject().setVelocity(playerVel)
 
         return Task.cont
 
