@@ -3,11 +3,8 @@ import sys
 from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
 from panda3d.core import BitMask32
-from panda3d.core import CollisionHandlerFloor
-from panda3d.core import CollisionHandlerPusher
 from panda3d.core import CollisionNode
 from panda3d.core import CollisionPlane
-from panda3d.core import CollisionRay
 from panda3d.core import CollisionSphere
 from panda3d.core import CollisionTraverser
 from panda3d.core import Plane
@@ -100,8 +97,9 @@ class MyApp(ShowBase):
         self.smiley.setPos(-5, 10, 1.25)
 
         # playerNP is at the player's feet, not their center of mass.
-        self.playerNP = self.render.attachNewNode("Player")
+        self.playerNP = self.render.attachNewNode(ActorNode("Player"))
         self.playerNP.setPos(0, 0, 0)
+        self.physicsMgr.attachPhysicalNode(self.playerNP.node())
         self.playerHeadNP = self.playerNP.attachNewNode("PlayerHead")
         # Put the player's head a little below the actual top of the player so
         # that if you're standing right under an object, the object is still
@@ -116,6 +114,10 @@ class MyApp(ShowBase):
         #     https://www.panda3d.org/manual/index.php/Lenses_and_Field_of_View
         self.camLens.setNear(0.1)
 
+        # Used to handle collisions of physics-affected objects (currently just
+        # bullets) with the ground.
+        self.groundPhysicsPusher = PhysicsCollisionHandler()
+
         # For colliding the player with walls and other such obstacles to
         # horizontal motion.
         self.playerCollider = self.playerNP.attachNewNode(
@@ -128,26 +130,9 @@ class MyApp(ShowBase):
             CollisionSphere(0, 0, 0.5 * PLAYER_HEIGHT, 0.5 * PLAYER_HEIGHT)
         )
 
-        self.playerGroundCollider = self.playerNP.attachNewNode(
-            CollisionNode("playerGroundCollider")
-        )
-        # Prevent all other "from" objects from being collision-checked into
-        # the ray, since most (all?) of those tests aren't supported (leading
-        # to warnings) and the collision checks wouldn't be useful anyway.
-        self.playerGroundCollider.node().setIntoCollideMask(
-            COLLIDE_MASK_INTO_NONE
-        )
-        self.playerGroundCollider.node().setFromCollideMask(
-            COLLIDE_MASK_INTO_FLOOR
-        )
-        self.playerGroundCollider.node().addSolid(
-            CollisionRay(0, 0, PLAYER_HEIGHT, 0, 0, -PLAYER_HEIGHT)
-        )
-
-        pusher = CollisionHandlerPusher()
-        pusher.addCollider(self.playerCollider, self.playerNP,
-                           self.drive.node())
-        self.cTrav.addCollider(self.playerCollider, pusher)
+        self.groundPhysicsPusher.addCollider(self.playerCollider,
+                                             self.playerNP)
+        self.cTrav.addCollider(self.playerCollider, self.groundPhysicsPusher)
 
         # Add collision geometry for the ground. For now, it's just an infinite
         # plane; eventually we should figure out how to actually match it with
@@ -161,19 +146,6 @@ class MyApp(ShowBase):
         self.groundCollider.node().addSolid(
             CollisionPlane(Plane(Vec3(0, 0, 1), Point3(0, 0, 0)))
         )
-
-        # Used to handle collisions of physics-affected objects (currently just
-        # bullets) with the ground.
-        self.groundPhysicsPusher = PhysicsCollisionHandler()
-
-        # Add a CollisionHandlerFloor to keep the player from falling through
-        # the ground. Note that this doesn't involve the physics engine; it
-        # just moves the player up (or down?) in order to resolve collisions
-        # between them and other collision solids (presumably the ground).
-        lifter = CollisionHandlerFloor()
-        lifter.addCollider(self.playerGroundCollider, self.playerNP,
-                           self.drive.node())
-        self.cTrav.addCollider(self.playerGroundCollider, lifter)
 
         # Hide the mouse.
         self.disableMouse()
