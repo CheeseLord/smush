@@ -286,11 +286,11 @@ class MyApp(ShowBase):
         physicsNP = self.render.attachNewNode(ActorNode("smileyPhysics"))
         self.physicsMgr.attachPhysicalNode(physicsNP.node())
 
-        bulletVec = self.render.getRelativeVector(self.playerHeadNP,
+        playerVel = self.playerNP.node().getPhysicsObject().getVelocity()
+        bulletVel = self.render.getRelativeVector(self.playerHeadNP,
                                                   Vec3(0, 30, 0))
 
-        # TODO: Pick a relevant direction.
-        physicsNP.node().getPhysicsObject().setVelocity(bulletVec)
+        physicsNP.node().getPhysicsObject().setVelocity(playerVel + bulletVel)
 
         ball = self.loader.loadModel("smiley")
         ball.reparentTo(physicsNP)
