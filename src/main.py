@@ -206,6 +206,7 @@ class MyApp(ShowBase):
         moveBack  = self.mouseWatcherNode.is_button_down("s")
         turnLeft  = self.mouseWatcherNode.is_button_down("q")
         turnRight = self.mouseWatcherNode.is_button_down("e")
+        jump      = self.mouseWatcherNode.is_button_down("space")
 
         # TODO: Handle rotations by setting angular velocity instead of
         # instantaneously changing HPR.
@@ -222,7 +223,20 @@ class MyApp(ShowBase):
 
         playerVel = self.render.getRelativeVector(self.playerNP,
                                                   Vec3(rightVel, fwdVel, 0))
-        self.playerNP.node().getPhysicsObject().setVelocity(playerVel)
+
+        # Preserve the z component of the player's old velocity.
+        playerPhysicsObj = self.playerNP.node().getPhysicsObject()
+        playerZVel = playerPhysicsObj.getVelocity().getZ()
+        playerVel += Vec3(0, 0, playerZVel)
+
+        # Allow the player to jump, but only if they're standing on the ground.
+        # TODO: Really this should be "but only if there's ground beneath their
+        # feet, regardless of z coordinate", but I don't know how to check for
+        # that.
+        if jump and -0.001 <= self.playerNP.getZ() <= 0.001:
+            playerVel += Vec3(0, 0, 5)
+
+        playerPhysicsObj.setVelocity(playerVel)
 
         return Task.cont
 
