@@ -233,7 +233,10 @@ class MyApp(ShowBase):
         # TODO: Really this should be "but only if there's ground beneath their
         # feet, regardless of z coordinate", but I don't know how to check for
         # that.
-        if jump and -0.001 <= self.playerNP.getZ() <= 0.001:
+        # Also only allow jumping if they're not already going up. I don't know
+        # how this can happen, but it has been observed.
+        if jump and -0.001 <= self.playerNP.getZ() <= 0.001 and \
+                playerZVel <= 0.001:
             playerVel += Vec3(0, 0, 5)
 
         playerPhysicsObj.setVelocity(playerVel)
