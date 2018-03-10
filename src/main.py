@@ -99,15 +99,15 @@ class MyApp(ShowBase):
         # pushed underground.
         self.smiley.setPos(-5, 10, 1.25)
 
-        # playerNode is at the player's feet, not their center of mass.
-        self.playerNode = self.render.attachNewNode("Player")
-        self.playerNode.setPos(0, 0, 0)
-        self.playerHeadNode = self.playerNode.attachNewNode("PlayerHead")
+        # playerNP is at the player's feet, not their center of mass.
+        self.playerNP = self.render.attachNewNode("Player")
+        self.playerNP.setPos(0, 0, 0)
+        self.playerHeadNP = self.playerNP.attachNewNode("PlayerHead")
         # Put the player's head a little below the actual top of the player so
         # that if you're standing right under an object, the object is still
         # within your camera's viewing frustum.
-        self.playerHeadNode.setPos(0, 0, PLAYER_HEIGHT - 0.2)
-        self.camera.reparentTo(self.playerHeadNode)
+        self.playerHeadNP.setPos(0, 0, PLAYER_HEIGHT - 0.2)
+        self.camera.reparentTo(self.playerHeadNP)
         # Move the camera's near plane closer than the default (1) so that when
         # the player butts their head against a wall, they don't see through
         # it. In general, this distance should be close enough that the near
@@ -118,7 +118,7 @@ class MyApp(ShowBase):
 
         # For colliding the player with walls and other such obstacles to
         # horizontal motion.
-        self.playerCollider = self.playerNode.attachNewNode(
+        self.playerCollider = self.playerNP.attachNewNode(
             CollisionNode("playerCollider")
         )
         self.playerCollider.node().setIntoCollideMask(COLLIDE_MASK_INTO_PLAYER)
@@ -128,7 +128,7 @@ class MyApp(ShowBase):
             CollisionSphere(0, 0, 0.5 * PLAYER_HEIGHT, 0.5 * PLAYER_HEIGHT)
         )
 
-        self.playerGroundCollider = self.playerNode.attachNewNode(
+        self.playerGroundCollider = self.playerNP.attachNewNode(
             CollisionNode("playerGroundCollider")
         )
         # Prevent all other "from" objects from being collision-checked into
@@ -145,7 +145,7 @@ class MyApp(ShowBase):
         )
 
         pusher = CollisionHandlerPusher()
-        pusher.addCollider(self.playerCollider, self.playerNode,
+        pusher.addCollider(self.playerCollider, self.playerNP,
                            self.drive.node())
         self.cTrav.addCollider(self.playerCollider, pusher)
 
@@ -171,7 +171,7 @@ class MyApp(ShowBase):
         # just moves the player up (or down?) in order to resolve collisions
         # between them and other collision solids (presumably the ground).
         lifter = CollisionHandlerFloor()
-        lifter.addCollider(self.playerGroundCollider, self.playerNode,
+        lifter.addCollider(self.playerGroundCollider, self.playerNP,
                            self.drive.node())
         self.cTrav.addCollider(self.playerGroundCollider, lifter)
 
@@ -239,8 +239,8 @@ class MyApp(ShowBase):
         # x is sideways and y is forward. A positive rotation is to the left.
         rotateAmt = (turnLeft - turnRight) * rotateSpeed * dt
 
-        self.playerNode.setPos(self.playerNode, rightDelta, fwdDelta, 0)
-        self.playerNode.setHpr(self.playerNode, rotateAmt, 0, 0)
+        self.playerNP.setPos(self.playerNP, rightDelta, fwdDelta, 0)
+        self.playerNP.setHpr(self.playerNP, rotateAmt, 0, 0)
 
         return Task.cont
 
@@ -274,14 +274,14 @@ class MyApp(ShowBase):
             deltaHeading = (mouseX - centerX) * -mouseGain
             deltaPitch   = (mouseY - centerY) * -mouseGain
 
-            # Note that the heading change is applied to the playerNode, while
-            # the pitch is applied to the playerHeadNode. You can use the mouse
+            # Note that the heading change is applied to the playerNP, while
+            # the pitch is applied to the playerHeadNP. You can use the mouse
             # to turn from side to side, which affects your movement, but there
             # is no way to tilt the player upward or downward because you're
             # always standing upright.
 
             # For heading, just adjust by the appropriate amount.
-            self.playerNode.setHpr(self.playerNode, deltaHeading, 0, 0)
+            self.playerNP.setHpr(self.playerNP, deltaHeading, 0, 0)
 
             # For pitch, we need to be more careful. If we just call setHpr to
             # adjust the pitch, then Panda3D will apply the full rotation,
@@ -292,9 +292,9 @@ class MyApp(ShowBase):
             # detect and fix the case where the player has tried to look too
             # high or low (by capping them to just under 90 degrees in either
             # direction).
-            newPitch = self.playerHeadNode.getP() + deltaPitch
+            newPitch = self.playerHeadNP.getP() + deltaPitch
             newPitch = constrainToInterval(newPitch, -89, 89)
-            self.playerHeadNode.setP(newPitch)
+            self.playerHeadNP.setP(newPitch)
 
         if mouseWarpSucceeded:
             # Prevent this value from growing out of control, on principle.
@@ -310,7 +310,7 @@ class MyApp(ShowBase):
         physicsNP = self.render.attachNewNode(ActorNode("smileyPhysics"))
         self.physicsMgr.attachPhysicalNode(physicsNP.node())
 
-        bulletVec = self.render.getRelativeVector(self.playerHeadNode,
+        bulletVec = self.render.getRelativeVector(self.playerHeadNP,
                                                   Vec3(0, 30, 0))
 
         # TODO: Pick a relevant direction.
@@ -319,8 +319,8 @@ class MyApp(ShowBase):
         ball = self.loader.loadModel("smiley")
         ball.reparentTo(physicsNP)
         ball.setScale(0.02)
-        physicsNP.setHpr(self.playerNode.getHpr())
-        physicsNP.setPos(self.render.getRelativePoint(self.playerHeadNode,
+        physicsNP.setHpr(self.playerNP.getHpr())
+        physicsNP.setPos(self.render.getRelativePoint(self.playerHeadNP,
                                                       Point3(0, 0, 0)))
 
         # Also add collision geometry to the bullet
