@@ -241,7 +241,7 @@ class MyApp(ShowBase):
         # how this can happen, but it has been observed.
         if jump and -0.001 <= self.playerNP.getZ() <= 0.001 and \
                 playerZVel <= 0.001:
-            jumpHeight = 0.6
+            jumpHeight = 1.1
             jumpSpeed = math.sqrt(2 * GRAVITY_ACCEL * jumpHeight)
             playerVel += Vec3(0, 0, jumpSpeed)
 
