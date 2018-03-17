@@ -18,7 +18,7 @@ from panda3d.physics import LinearVectorForce
 from panda3d.physics import PhysicsCollisionHandler
 from src.logconfig import enableDebugLogging
 from src.logconfig import newLogger
-from src.utils import constrainToInterval
+from src.utils import constrainToInterval, moveVectorTowardByAtMost
 
 log = newLogger(__name__)
 
@@ -193,10 +193,20 @@ class MyApp(ShowBase):
         # TODO: Blah blah magic numbers bad. But actually though, can we put
         # all these in a config file?
 
-        # In arbitrary units of length per second.
-        forwardSpeed  = 20
-        sidewaysSpeed = 15
-        backwardSpeed = 10
+        # TODO: Have different maximum forward/sideways/backward velocity
+        # components. Something like this:
+        #
+        # forwardSpeed  = 20
+        # sidewaysSpeed = 15
+        # backwardSpeed = 10
+
+        # In meters per second.
+        # TODO: This is too high... if we rescale the environment more sanely
+        # can it feel natural with a not-absurd top speed?
+        maxSpeed = 15
+
+        timeToReachTopSpeed = 0.3
+        maxAccel = maxSpeed / timeToReachTopSpeed
 
         # Degrees per second.
         rotateSpeed   = 90
@@ -218,20 +228,28 @@ class MyApp(ShowBase):
         rotateAmt = (turnLeft - turnRight) * rotateSpeed * dt
         self.playerNP.setHpr(self.playerNP, rotateAmt, 0, 0)
 
-        rightVel = (moveRight - moveLeft) * sidewaysSpeed
-        fwdVel   = 0
-        if moveFwd and not moveBack:
-            fwdVel = forwardSpeed
-        elif moveBack and not moveFwd:
-            fwdVel = -backwardSpeed
+        # Compute direction of target velocity in x,y-plane.
+        netRunRight = moveRight - moveLeft
+        netRunFwd   = moveFwd   - moveBack
+        # TODO: Does this go before or after we add in the z?
+        targetVel = self.render.getRelativeVector(
+            self.playerNP,
+            Vec3(netRunRight, netRunFwd, 0)
+        )
 
-        playerVel = self.render.getRelativeVector(self.playerNP,
-                                                  Vec3(rightVel, fwdVel, 0))
+        # Rescale to desired magnitude (if not zero).
+        if netRunFwd != 0 or netRunRight != 0:
+            targetVel *= maxSpeed / targetVel.length()
 
-        # Preserve the z component of the player's old velocity.
+        # Copy z from current velocity.
         playerPhysicsObj = self.playerNP.node().getPhysicsObject()
-        playerZVel = playerPhysicsObj.getVelocity().getZ()
-        playerVel += Vec3(0, 0, playerZVel)
+        currPlayerVel = playerPhysicsObj.getVelocity()
+        playerZVel = currPlayerVel.getZ()
+        targetVel += Vec3(0, 0, playerZVel)
+
+        # Move current velocity toward target velocity by at most a*dt
+        newPlayerVel = moveVectorTowardByAtMost(currPlayerVel, targetVel,
+                                                maxAccel * dt)
 
         # Allow the player to jump, but only if they're standing on the ground.
         # TODO: Really this should be "but only if there's ground beneath their
@@ -243,9 +261,9 @@ class MyApp(ShowBase):
                 playerZVel <= 0.001:
             jumpHeight = 1.1
             jumpSpeed = math.sqrt(2 * GRAVITY_ACCEL * jumpHeight)
-            playerVel += Vec3(0, 0, jumpSpeed)
+            newPlayerVel += Vec3(0, 0, jumpSpeed)
 
-        playerPhysicsObj.setVelocity(playerVel)
+        playerPhysicsObj.setVelocity(newPlayerVel)
 
         return Task.cont
 
