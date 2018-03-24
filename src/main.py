@@ -4,6 +4,7 @@ import sys
 from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
 from panda3d.core import BitMask32
+from panda3d.core import CollisionHandlerEvent
 from panda3d.core import CollisionNode
 from panda3d.core import CollisionPlane
 from panda3d.core import CollisionSphere
@@ -44,6 +45,10 @@ def main():
 
     if LOG_DEBUG:
         enableDebugLogging()
+        log.info("Debug logging enabled.")
+        log.debug("Debug logging enabled.")
+    else:
+        log.info("Debug logging disabled.")
 
     app = MyApp()
     app.run()
@@ -170,6 +175,45 @@ class MyApp(ShowBase):
 
         self.setupEventHandlers()
         self.taskMgr.add(self.movePlayerTask, "MovePlayerTask")
+
+
+
+        ################################################################
+        # Bunch of stuff copied from collisions-beginner/step3.py. Let's
+        # see if it works this time...
+        cbColHandler = CollisionHandlerEvent()
+
+        heartModel = self.loader.loadModel("heart")
+        heartModel.reparentTo(self.render) # Is this necessary??
+        heartModel.setPos(2, 25, 0)
+        heartModel.reparentTo(self.camera)
+        heartCollider = heartModel.find("**/collider_heart")
+        self.cTrav.addCollider(heartCollider, cbColHandler)
+
+        cbSmileyModel = self.loader.loadModel("smiley")
+        cbSmileyModel.reparentTo(self.render)
+        cbSmileyModel.setPos(-5, 10, 3.5)
+        cbSmileyCollider = cbSmileyModel.attachNewNode(
+            CollisionNode("smileycnode")
+        )
+        cbSmileyCollider.node().addSolid(CollisionSphere(0, 0, 0, 1))
+
+        cbColHandler.addInPattern("%fn-into-%in")
+        cbColHandler.addOutPattern("%fn-out-%in")
+
+        self.accept("collider_heart-into-smileycnode", self.cbCollideEventIn)
+        self.accept("collider_heart-out-smileycnode",  self.cbCollideEventOut)
+
+    # Yeah yeah, these could be nonmember functions because they're trivial
+    # right now. Good job, Pylint, you get a cookie.
+    def cbCollideEventIn(self, entry): # pylint: disable=no-self-use
+        log.info("Collision detected IN.")
+        # There, pylint, I used the parameter. Happy?
+        log.debug("    %s", entry)
+
+    def cbCollideEventOut(self, entry): # pylint: disable=no-self-use
+        log.info("Collision detected OUT.")
+        log.debug("    %s", entry)
 
     def setupEventHandlers(self):
         # Provide a way to exit even when we make the window fullscreen.
