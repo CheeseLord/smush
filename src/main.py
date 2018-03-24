@@ -183,11 +183,14 @@ class MyApp(ShowBase):
         # see if it works this time...
         cbColHandler = CollisionHandlerEvent()
 
-        heartModel = self.loader.loadModel("heart")
+        heartModel = self.loader.loadModel("frowney")
         heartModel.reparentTo(self.render) # Is this necessary??
         heartModel.setPos(2, 25, 0)
         heartModel.reparentTo(self.camera)
-        heartCollider = heartModel.find("**/collider_heart")
+        heartCollider = heartModel.attachNewNode(
+            CollisionNode("collider_heart")
+        )
+        heartCollider.node().addSolid(CollisionSphere(0, 0, 0, 1))
         self.cTrav.addCollider(heartCollider, cbColHandler)
 
         cbSmileyModel = self.loader.loadModel("smiley")
