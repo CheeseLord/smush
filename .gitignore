@@ -23,7 +23,8 @@ var/
 wheels/
 *.egg-info/
 .installed.cfg
-*.egg
+# These are git-lfs'd, but do need to be in the repo.
+# *.egg
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
