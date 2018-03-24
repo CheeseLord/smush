@@ -184,9 +184,8 @@ class MyApp(ShowBase):
         cbColHandler = CollisionHandlerEvent()
 
         heartModel = self.loader.loadModel("frowney")
-        heartModel.reparentTo(self.render) # Is this necessary??
-        heartModel.setPos(2, 25, 0)
         heartModel.reparentTo(self.camera)
+        heartModel.setPos(2, 25, 0)
         heartCollider = heartModel.attachNewNode(
             CollisionNode("collider_heart")
         )
