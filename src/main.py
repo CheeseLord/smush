@@ -131,11 +131,9 @@ class MyApp(ShowBase):
         """
 
         # Load the environment model.
+        # TODO: Magic numbers bad (position and scale)
         self.scene = self.loader.loadModel("models/environment")
         self.scene.reparentTo(self.render)
-
-        # Apply scale and position transforms on the model.
-        # Something something magic numbers bad something something.
         self.scene.setScale(0.25, 0.25, 0.25)
         self.scene.setPos(-8, 42, 0)
 
@@ -148,6 +146,7 @@ class MyApp(ShowBase):
         self.groundCollider.node().setIntoCollideMask(
             COLLIDE_MASK_INTO_FLOOR
         )
+        # The collision solid must be added to the node, not the NodePath.
         self.groundCollider.node().addSolid(
             CollisionPlane(Plane(Vec3(0, 0, 1), Point3(0, 0, 0)))
         )
@@ -156,18 +155,20 @@ class MyApp(ShowBase):
         # stolen from one of the examples on this page:
         #     https://www.panda3d.org/forums/viewtopic.php?t=7918
         self.smiley = self.loader.loadModel("smiley")
+        self.smiley.reparentTo(self.render)
+        # Lift the smiley up a bit so that if the player runs into it, it'll
+        # try to push them down. This used to demonstrate a bug where the
+        # ground didn't push back and so the player would just be pushed
+        # underground. At this point it's just here for historical reasons.
+        self.smiley.setPos(-5, 10, 1.25)
+
         self.smileyCollide = self.smiley.attachNewNode(
             CollisionNode("SmileyCollide")
         )
         # The smiley is logically a wall, so set its into collision mask as
         # such.
         self.smileyCollide.node().setIntoCollideMask(COLLIDE_MASK_INTO_WALL)
-        # TODO: Why .node()? Can't add a solid to a NodePath?
         self.smileyCollide.node().addSolid(CollisionSphere(0, 0, 0, 1))
-        self.smiley.reparentTo(self.render)
-        # Lift the smiley up some so the player will more consistently be
-        # pushed underground.
-        self.smiley.setPos(-5, 10, 1.25)
 
     def initPlayer(self):
         # playerNP is at the player's feet, not their center of mass.
@@ -188,8 +189,7 @@ class MyApp(ShowBase):
         #     https://www.panda3d.org/manual/index.php/Lenses_and_Field_of_View
         self.camLens.setNear(0.1)
 
-        # For colliding the player with walls and other such obstacles to
-        # horizontal motion.
+        # For colliding the player with walls, floor, and other such obstacles.
         self.playerCollider = self.playerNP.attachNewNode(
             CollisionNode("playerCollider")
         )
