@@ -82,7 +82,13 @@ class MyApp(ShowBase):
         # How many previous frames have we successfully warped the mouse? Only
         # tracked up to FRAMES_NEEDED_TO_WARP.
         # I would have initialized this in self.initKeyboardAndMouse, but
-        # pylint doesn't like attribute-defined-outside-init.
+        # pylint doesn't like attribute-defined-outside-init. Actually, I'm not
+        # entirely sure why it doesn't complain about all the other attributes
+        # we define outside of init. Maybe it has something to do with this?
+        #     https://github.com/PyCQA/pylint/issues/192
+        # Specifically the comment:
+        #     "Don't emit 'attribute-defined-outside-init' if the attribute was
+        #     set by a function call in a defining method."
         self.successfulMouseWarps = 0
 
         self.initPhysics()
@@ -211,7 +217,6 @@ class MyApp(ShowBase):
         props = WindowProperties()
         props.setCursorHidden(True)
         self.win.requestProperties(props)
-        self.taskMgr.add(self.controlCamera, "camera-task")
 
         # Provide a way to exit even when we make the window fullscreen.
         self.accept('control-q', sys.exit)
@@ -226,7 +231,8 @@ class MyApp(ShowBase):
         # self.win.set_close_request_event("window-close")
         # self.accept("window-close", self.handleWindowClose)
 
-        self.taskMgr.add(self.movePlayerTask, "MovePlayerTask")
+        self.taskMgr.add(self.controlCameraTask, "ControlCameraTask")
+        self.taskMgr.add(self.movePlayerTask,    "MovePlayerTask")
 
 
     ###########################################################################
@@ -326,7 +332,7 @@ class MyApp(ShowBase):
 
         return Task.cont
 
-    def controlCamera(self, task):  # pylint: disable=unused-argument
+    def controlCameraTask(self, task):  # pylint: disable=unused-argument
         # Degrees per pixel
         mouseGain = 0.25
 
