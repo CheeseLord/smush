@@ -206,8 +206,8 @@ class MyApp(ShowBase):
         self.accept("collider_heart-into-smileycnode", self.cbCollideEventIn)
         self.accept("collider_heart-out-smileycnode",  self.cbCollideEventOut)
 
-        self.accept("BulletCollider-into-smileycnode", self.cbCollideEventIn)
-        self.accept("BulletCollider-out-smileycnode",  self.cbCollideEventOut)
+        self.accept("BulletCollider2-into-smileycnode", self.cbCollideEventIn)
+        self.accept("BulletCollider2-out-smileycnode",  self.cbCollideEventOut)
 
     # Yeah yeah, these could be nonmember functions because they're trivial
     # right now. Good job, Pylint, you get a cookie.
@@ -406,16 +406,26 @@ class MyApp(ShowBase):
                                                  COLLIDE_MASK_INTO_ENTITY)
         bulletCollider.node().addSolid(CollisionSphere(0, 0, 0, 0.02))
 
-        # And handle its collisions with the ground.
+        # We can't have two collision handlers for the same collision node. But
+        # we can create two collision nodes with the same geometry, reparent
+        # one to the other so they always have the same position, and then have
+        # one collision handler for each.
+        # TODO: Better name.
+        bulletCollider2 = bulletCollider.attachNewNode(
+            CollisionNode("BulletCollider2")
+        )
+        bulletCollider2.node().setIntoCollideMask(COLLIDE_MASK_INTO_ENTITY)
+        bulletCollider2.node().setFromCollideMask(COLLIDE_MASK_INTO_FLOOR |
+                                                  COLLIDE_MASK_INTO_WALL  |
+                                                  COLLIDE_MASK_INTO_ENTITY)
+        bulletCollider2.node().addSolid(CollisionSphere(0, 0, 0, 0.02))
+
+        # Handle collisions through physics via bulletCollider.
         self.physicsCollisionHandler.addCollider(bulletCollider, physicsNP)
         self.cTrav.addCollider(bulletCollider, self.physicsCollisionHandler)
 
-        # If you uncomment this line, then bullets no longer obey physics w/r/t
-        # collisions, but we log any collisions between bullets and the upper
-        # smiley. I'm guessing the cTrav can only have one collision handler
-        # for a given collision node, so this line effectively undoes the
-        # previous cTrav.addCollider call?
-        # self.cTrav.addCollider(bulletCollider, self.cbColHandler)
+        # Handle collisions in custom manner via bulletCollider2.
+        self.cTrav.addCollider(bulletCollider2, self.cbColHandler)
 
 
 if __name__ == "__main__":
