@@ -57,6 +57,10 @@ def main():
     log.info("End.")
 
 class MyApp(ShowBase):
+
+    ###########################################################################
+    # Initialization
+
     def __init__(self):
         ShowBase.__init__(self)
 
@@ -75,15 +79,56 @@ class MyApp(ShowBase):
         # self.globalClock everywhere else.
         self.globalClock = globalClock # pylint: disable=undefined-variable
 
-        # Add collision handler
-        self.cTrav = CollisionTraverser()
+        # How many previous frames have we successfully warped the mouse? Only
+        # tracked up to FRAMES_NEEDED_TO_WARP.
+        # I would have initialized this in self.initKeyboardAndMouse, but
+        # pylint doesn't like attribute-defined-outside-init.
+        self.successfulMouseWarps = 0
 
+        self.initPhysics()
+        self.initCollisionHandling()
+        self.initObjects()
+        self.initPlayer()
+        self.initKeyboardAndMouse()
+
+    def initPhysics(self):
         # Start the physics (yes, with the particle engine).
         self.enableParticles()
         gravityNode = ForceNode("world-forces")
         gravityForce = LinearVectorForce(0, 0, -GRAVITY_ACCEL)
         gravityNode.addForce(gravityForce)
         self.physicsMgr.addLinearForce(gravityForce)
+
+    def initCollisionHandling(self):
+        """
+        Initialize the collision handlers. This must be run before any objects
+        are created.
+        """
+
+        self.cTrav = CollisionTraverser()
+
+        # Used to handle collisions between physics-affected objects.
+        self.physicsCollisionHandler = PhysicsCollisionHandler()
+
+        # Used to run custom code on collisions.
+        self.eventCollisionHandler = CollisionHandlerEvent()
+
+        self.eventCollisionHandler.addInPattern("%fn-into-%in")
+        self.eventCollisionHandler.addOutPattern("%fn-out-%in")
+
+        self.accept("BulletColliderEvt-into-SmileyCollide",
+                    self.onCollideEventIn)
+        self.accept("BulletColliderEvt-out-SmileyCollide",
+                    self.onCollideEventOut)
+
+    def initObjects(self):
+        """
+        Initialize all the objects that are initially in the world. Set up
+        their geometry (position, orientation, scaling) and create collision
+        geometry for them as appropriate. (Therefore, initCollisionHandling
+        must be called before this function.) Load them all into the scene
+        graph.
+        """
 
         # Load the environment model.
         self.scene = self.loader.loadModel("models/environment")
@@ -93,6 +138,19 @@ class MyApp(ShowBase):
         # Something something magic numbers bad something something.
         self.scene.setScale(0.25, 0.25, 0.25)
         self.scene.setPos(-8, 42, 0)
+
+        # Add collision geometry for the ground. For now, it's just an infinite
+        # plane; eventually we should figure out how to actually match it with
+        # the environment model.
+        self.groundCollider = self.render.attachNewNode(
+            CollisionNode("groundCollider")
+        )
+        self.groundCollider.node().setIntoCollideMask(
+            COLLIDE_MASK_INTO_FLOOR
+        )
+        self.groundCollider.node().addSolid(
+            CollisionPlane(Plane(Vec3(0, 0, 1), Point3(0, 0, 0)))
+        )
 
         # Bring in a smily model, with a collision geometry. More or less
         # stolen from one of the examples on this page:
@@ -111,6 +169,7 @@ class MyApp(ShowBase):
         # pushed underground.
         self.smiley.setPos(-5, 10, 1.25)
 
+    def initPlayer(self):
         # playerNP is at the player's feet, not their center of mass.
         self.playerNP = self.render.attachNewNode(ActorNode("Player"))
         self.playerNP.setPos(0, 0, 0)
@@ -129,9 +188,6 @@ class MyApp(ShowBase):
         #     https://www.panda3d.org/manual/index.php/Lenses_and_Field_of_View
         self.camLens.setNear(0.1)
 
-        # Used to handle collisions between physics-affected objects.
-        self.physicsCollisionHandler = PhysicsCollisionHandler()
-
         # For colliding the player with walls and other such obstacles to
         # horizontal motion.
         self.playerCollider = self.playerNP.attachNewNode(
@@ -149,19 +205,7 @@ class MyApp(ShowBase):
         self.cTrav.addCollider(self.playerCollider,
                                self.physicsCollisionHandler)
 
-        # Add collision geometry for the ground. For now, it's just an infinite
-        # plane; eventually we should figure out how to actually match it with
-        # the environment model.
-        self.groundCollider = self.render.attachNewNode(
-            CollisionNode("groundCollider")
-        )
-        self.groundCollider.node().setIntoCollideMask(
-            COLLIDE_MASK_INTO_FLOOR
-        )
-        self.groundCollider.node().addSolid(
-            CollisionPlane(Plane(Vec3(0, 0, 1), Point3(0, 0, 0)))
-        )
-
+    def initKeyboardAndMouse(self):
         # Hide the mouse.
         self.disableMouse()
         props = WindowProperties()
@@ -169,38 +213,6 @@ class MyApp(ShowBase):
         self.win.requestProperties(props)
         self.taskMgr.add(self.controlCamera, "camera-task")
 
-        # How many previous frames have we successfully warped the mouse? Only
-        # tracked up to FRAMES_NEEDED_TO_WARP.
-        self.successfulMouseWarps = 0
-
-        self.setupEventHandlers()
-        self.taskMgr.add(self.movePlayerTask, "MovePlayerTask")
-
-        # Setup another collision handler that lets us run custom code on
-        # collisions.
-        self.eventCollisionHandler = CollisionHandlerEvent()
-
-        self.eventCollisionHandler.addInPattern("%fn-into-%in")
-        self.eventCollisionHandler.addOutPattern("%fn-out-%in")
-
-        self.accept("BulletColliderEvt-into-SmileyCollide",
-                    self.onCollideEventIn)
-        self.accept("BulletColliderEvt-out-SmileyCollide",
-                    self.onCollideEventOut)
-
-    # Yeah yeah, these could be nonmember functions because they're trivial
-    # right now. Good job, Pylint, you get a cookie.
-    def onCollideEventIn(self, entry): # pylint: disable=no-self-use
-        log.info("Collision detected IN.")
-        # There, pylint, I used the parameter. Happy?
-        log.debug("    %s", entry)
-
-    def onCollideEventOut(self, entry): # pylint: disable=no-self-use
-        # Note: I'm not sure we actually care about handling the "out" events.
-        log.info("Collision detected OUT.")
-        log.debug("    %s", entry)
-
-    def setupEventHandlers(self):
         # Provide a way to exit even when we make the window fullscreen.
         self.accept('control-q', sys.exit)
 
@@ -213,6 +225,24 @@ class MyApp(ShowBase):
         # Handle window close request (clicking the X, Alt-F4, etc.)
         # self.win.set_close_request_event("window-close")
         # self.accept("window-close", self.handleWindowClose)
+
+        self.taskMgr.add(self.movePlayerTask, "MovePlayerTask")
+
+
+    ###########################################################################
+    # Other (unsorted)
+
+    # Yeah yeah, these could be nonmember functions because they're trivial
+    # right now. Good job, Pylint, you get a cookie.
+    def onCollideEventIn(self, entry): # pylint: disable=no-self-use
+        log.info("Collision detected IN.")
+        # There, pylint, I used the parameter. Happy?
+        log.debug("    %s", entry)
+
+    def onCollideEventOut(self, entry): # pylint: disable=no-self-use
+        # Note: I'm not sure we actually care about handling the "out" events.
+        log.info("Collision detected OUT.")
+        log.debug("    %s", entry)
 
     # We don't use task, but we can't remove it because the function signature
     # is from Panda3D.
