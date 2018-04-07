@@ -91,6 +91,9 @@ class MyApp(ShowBase):
         #     set by a function call in a defining method."
         self.successfulMouseWarps = 0
 
+        # This is just here to satisfy pylint's attribute-defined-outside-init.
+        self.smileyIsFrowney = False
+
         self.initPhysics()
         self.initCollisionHandling()
         self.initObjects()
@@ -157,18 +160,21 @@ class MyApp(ShowBase):
             CollisionPlane(Plane(Vec3(0, 0, 1), Point3(0, 0, 0)))
         )
 
-        # Bring in a smily model, with a collision geometry. More or less
-        # stolen from one of the examples on this page:
-        #     https://www.panda3d.org/forums/viewtopic.php?t=7918
-        self.smiley = self.loader.loadModel("smiley")
-        self.smiley.reparentTo(self.render)
-        # Lift the smiley up a bit so that if the player runs into it, it'll
-        # try to push them down. This used to demonstrate a bug where the
+        # A floating spherical object which can be toggled between a smiley and
+        # a frowney. Called the smiley for historical reasons.
+        self.smileyNP = self.render.attachNewNode("SmileyNP")
+        # Lift the smiley/frowney up a bit so that if the player runs into it,
+        # it'll try to push them down. This used to demonstrate a bug where the
         # ground didn't push back and so the player would just be pushed
-        # underground. At this point it's just here for historical reasons.
-        self.smiley.setPos(-5, 10, 1.25)
+        # underground. At this point it's just for historical reasons.
+        self.smileyNP.setPos(-5, 10, 1.25)
 
-        self.smileyCollide = self.smiley.attachNewNode(
+        self.smileyModel = self.loader.loadModel("smiley")
+        self.smileyModel.reparentTo(self.smileyNP)
+        self.frowneyModel = self.loader.loadModel("frowney")
+        self.smileyIsFrowney = False
+
+        self.smileyCollide = self.smileyNP.attachNewNode(
             CollisionNode("SmileyCollide")
         )
         # The smiley is logically a wall, so set its into collision mask as
@@ -245,10 +251,21 @@ class MyApp(ShowBase):
         # There, pylint, I used the parameter. Happy?
         log.debug("    %s", entry)
 
+        self.toggleSmileyFrowney()
+
     def onCollideEventOut(self, entry): # pylint: disable=no-self-use
         # Note: I'm not sure we actually care about handling the "out" events.
         log.info("Collision detected OUT.")
         log.debug("    %s", entry)
+
+    def toggleSmileyFrowney(self):
+        if not self.smileyIsFrowney:
+            self.smileyModel.detachNode()
+            self.frowneyModel.reparentTo(self.smileyNP)
+        else:
+            self.frowneyModel.detachNode()
+            self.smileyModel.reparentTo(self.smileyNP)
+        self.smileyIsFrowney = not self.smileyIsFrowney
 
     # We don't use task, but we can't remove it because the function signature
     # is from Panda3D.
