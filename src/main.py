@@ -176,47 +176,27 @@ class MyApp(ShowBase):
         self.setupEventHandlers()
         self.taskMgr.add(self.movePlayerTask, "MovePlayerTask")
 
+        # Setup another collision handler that lets us run custom code on
+        # collisions.
+        self.eventCollisionHandler = CollisionHandlerEvent()
 
+        self.eventCollisionHandler.addInPattern("%fn-into-%in")
+        self.eventCollisionHandler.addOutPattern("%fn-out-%in")
 
-        ################################################################
-        # Bunch of stuff copied from collisions-beginner/step3.py. Let's
-        # see if it works this time...
-        self.cbColHandler = CollisionHandlerEvent()
-
-        heartModel = self.loader.loadModel("frowney")
-        heartModel.reparentTo(self.camera)
-        heartModel.setPos(2, 25, 0)
-        heartCollider = heartModel.attachNewNode(
-            CollisionNode("collider_heart")
-        )
-        heartCollider.node().addSolid(CollisionSphere(0, 0, 0, 1))
-        self.cTrav.addCollider(heartCollider, self.cbColHandler)
-
-        cbSmileyModel = self.loader.loadModel("smiley")
-        cbSmileyModel.reparentTo(self.render)
-        cbSmileyModel.setPos(-5, 10, 3.5)
-        cbSmileyCollider = cbSmileyModel.attachNewNode(
-            CollisionNode("smileycnode")
-        )
-        cbSmileyCollider.node().addSolid(CollisionSphere(0, 0, 0, 1))
-
-        self.cbColHandler.addInPattern("%fn-into-%in")
-        self.cbColHandler.addOutPattern("%fn-out-%in")
-
-        self.accept("collider_heart-into-smileycnode", self.cbCollideEventIn)
-        self.accept("collider_heart-out-smileycnode",  self.cbCollideEventOut)
-
-        self.accept("BulletCollider2-into-smileycnode", self.cbCollideEventIn)
-        self.accept("BulletCollider2-out-smileycnode",  self.cbCollideEventOut)
+        self.accept("BulletColliderEvt-into-SmileyCollide",
+                    self.onCollideEventIn)
+        self.accept("BulletColliderEvt-out-SmileyCollide",
+                    self.onCollideEventOut)
 
     # Yeah yeah, these could be nonmember functions because they're trivial
     # right now. Good job, Pylint, you get a cookie.
-    def cbCollideEventIn(self, entry): # pylint: disable=no-self-use
+    def onCollideEventIn(self, entry): # pylint: disable=no-self-use
         log.info("Collision detected IN.")
         # There, pylint, I used the parameter. Happy?
         log.debug("    %s", entry)
 
-    def cbCollideEventOut(self, entry): # pylint: disable=no-self-use
+    def onCollideEventOut(self, entry): # pylint: disable=no-self-use
+        # Note: I'm not sure we actually care about handling the "out" events.
         log.info("Collision detected OUT.")
         log.debug("    %s", entry)
 
@@ -397,35 +377,35 @@ class MyApp(ShowBase):
                                                       Point3(0, 0, 0)))
 
         # Also add collision geometry to the bullet
-        bulletCollider = physicsNP.attachNewNode(
-            CollisionNode("BulletCollider")
+        bulletColliderPhys = physicsNP.attachNewNode(
+            CollisionNode("BulletColliderPhys")
         )
-        bulletCollider.node().setIntoCollideMask(COLLIDE_MASK_INTO_ENTITY)
-        bulletCollider.node().setFromCollideMask(COLLIDE_MASK_INTO_FLOOR |
-                                                 COLLIDE_MASK_INTO_WALL  |
-                                                 COLLIDE_MASK_INTO_ENTITY)
-        bulletCollider.node().addSolid(CollisionSphere(0, 0, 0, 0.02))
+        bulletColliderPhys.node().setIntoCollideMask(COLLIDE_MASK_INTO_ENTITY)
+        bulletColliderPhys.node().setFromCollideMask(COLLIDE_MASK_INTO_FLOOR |
+                                                     COLLIDE_MASK_INTO_WALL  |
+                                                     COLLIDE_MASK_INTO_ENTITY)
+        bulletColliderPhys.node().addSolid(CollisionSphere(0, 0, 0, 0.02))
 
         # We can't have two collision handlers for the same collision node. But
         # we can create two collision nodes with the same geometry, reparent
         # one to the other so they always have the same position, and then have
         # one collision handler for each.
-        # TODO: Better name.
-        bulletCollider2 = bulletCollider.attachNewNode(
-            CollisionNode("BulletCollider2")
+        bulletColliderEvt = bulletColliderPhys.attachNewNode(
+            CollisionNode("BulletColliderEvt")
         )
-        bulletCollider2.node().setIntoCollideMask(COLLIDE_MASK_INTO_ENTITY)
-        bulletCollider2.node().setFromCollideMask(COLLIDE_MASK_INTO_FLOOR |
-                                                  COLLIDE_MASK_INTO_WALL  |
-                                                  COLLIDE_MASK_INTO_ENTITY)
-        bulletCollider2.node().addSolid(CollisionSphere(0, 0, 0, 0.02))
+        bulletColliderEvt.node().setIntoCollideMask(COLLIDE_MASK_INTO_ENTITY)
+        bulletColliderEvt.node().setFromCollideMask(COLLIDE_MASK_INTO_FLOOR |
+                                                    COLLIDE_MASK_INTO_WALL  |
+                                                    COLLIDE_MASK_INTO_ENTITY)
+        bulletColliderEvt.node().addSolid(CollisionSphere(0, 0, 0, 0.02))
 
-        # Handle collisions through physics via bulletCollider.
-        self.physicsCollisionHandler.addCollider(bulletCollider, physicsNP)
-        self.cTrav.addCollider(bulletCollider, self.physicsCollisionHandler)
+        # Handle collisions through physics via bulletColliderPhys.
+        self.physicsCollisionHandler.addCollider(bulletColliderPhys, physicsNP)
+        self.cTrav.addCollider(bulletColliderPhys,
+                               self.physicsCollisionHandler)
 
-        # Handle collisions in custom manner via bulletCollider2.
-        self.cTrav.addCollider(bulletCollider2, self.cbColHandler)
+        # Handle collisions in custom manner via bulletColliderEvt.
+        self.cTrav.addCollider(bulletColliderEvt, self.eventCollisionHandler)
 
 
 if __name__ == "__main__":
