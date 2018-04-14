@@ -252,7 +252,7 @@ class MyApp(ShowBase):
         log.debug("    %s", entry)
 
         # Get rid of the bullet.
-        bullet = entry.getFromNode().getParent(0).getParent(0)
+        bullet = entry.getFromNode().getParent(0)
         bullet.getParent(0).removeChild(bullet)
 
         self.toggleSmileyFrowney()
