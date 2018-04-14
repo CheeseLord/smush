@@ -447,10 +447,23 @@ class MyApp(ShowBase):
         # we can create two collision nodes with the same geometry, reparent
         # one to the other so they always have the same position, and then have
         # one collision handler for each.
-        bulletColliderEvt = bulletColliderPhys.attachNewNode(
+        bulletColliderEvt = physicsNP.attachNewNode(
             CollisionNode("BulletColliderEvt")
         )
-        bulletColliderEvt.node().setIntoCollideMask(COLLIDE_MASK_INTO_ENTITY)
+        # Don't allow anything to collide into the bulletColliderEvt. I am
+        # doing this to fix a problem where bullets would go flying off in
+        # weird directions when we changed bulletColliderEvt to be a child of
+        # physicsNP instead of a child of bulletColliderPhys. I _think_ the
+        # problem was that the bulletColliderPhys was colliding into the
+        # bulletColliderEvt. It seems reasonable to me to disallow all
+        # collisions into the bulletColliderEvt, since anything that needs to
+        # collide into the bullet can already collide into the
+        # bulletColliderPhys.
+        #
+        # Note that the bulletColliderEvt is probably still colliding into the
+        # bulletColliderPhys, but since we have no handler for that collision
+        # it's harmless.
+        bulletColliderEvt.node().setIntoCollideMask(COLLIDE_MASK_INTO_NONE)
         bulletColliderEvt.node().setFromCollideMask(COLLIDE_MASK_INTO_FLOOR |
                                                     COLLIDE_MASK_INTO_WALL  |
                                                     COLLIDE_MASK_INTO_ENTITY)
