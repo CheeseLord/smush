@@ -251,6 +251,10 @@ class MyApp(ShowBase):
         # There, pylint, I used the parameter. Happy?
         log.debug("    %s", entry)
 
+        # Get rid of the bullet.
+        bullet = entry.getFromNode().getParent(0).getParent(0)
+        bullet.getParent(0).removeChild(bullet)
+
         self.toggleSmileyFrowney()
 
     def onCollideEventOut(self, entry): # pylint: disable=no-self-use
