@@ -25,12 +25,17 @@ log = newLogger(__name__)
 
 LOG_DEBUG = False
 
+# MOVE-TO: control.py
 FRAMES_NEEDED_TO_WARP = 2
+
+# MOVE-TO: world_config.py
 PLAYER_HEIGHT = 2.0
 
+# MOVE-TO: world_config.py (or possibly physics.py?)
 # Magnitude.
 GRAVITY_ACCEL = 9.81
 
+# MOVE-TO: physics.py
 # Bitmasks for the "into" colliders
 # TODO: Remove "INTO_" from these names? It makes them kind of needlessly long,
 # especially since we don't have any COLLIDE_MASK_FROMs...
@@ -40,6 +45,7 @@ COLLIDE_MASK_INTO_WALL   = BitMask32(0x2)
 COLLIDE_MASK_INTO_PLAYER = BitMask32(0x4)
 COLLIDE_MASK_INTO_ENTITY = BitMask32(0x8) # For misc entities flying around
 
+# MOVE-TO: main.py (from here to the bottom of class MyApp)
 # TODO: figure out something re: pylint and nonconstant globals
 app = None # pylint: disable=invalid-name
 
@@ -251,6 +257,7 @@ class MyApp(ShowBase):
 ###########################################################################
 # Other (unsorted)
 
+# MOVE-TO: physics.py
 def onCollideEventIn(entry):
     log.debug("Collision detected IN.")
     # There, pylint, I used the parameter. Happy?
@@ -267,6 +274,7 @@ def onCollideEventOut(entry):
     log.debug("Collision detected OUT.")
     log.debug("    %s", entry)
 
+# MOVE-TO: graphics.py
 def toggleSmileyFrowney():
     if not app.smileyIsFrowney:
         app.smileyModel.detachNode()
@@ -276,6 +284,7 @@ def toggleSmileyFrowney():
         app.smileyModel.reparentTo(app.smileyNP)
     app.smileyIsFrowney = not app.smileyIsFrowney
 
+# MOVE-TO: control.py
 # We don't use task, but we can't remove it because the function signature
 # is from Panda3D.
 def movePlayerTask(task):  # pylint: disable=unused-argument
@@ -358,6 +367,7 @@ def movePlayerTask(task):  # pylint: disable=unused-argument
 
     return Task.cont
 
+# MOVE-TO: control.py
 def controlCameraTask(task):  # pylint: disable=unused-argument
     # Degrees per pixel
     mouseGain = 0.25
@@ -419,6 +429,8 @@ def controlCameraTask(task):  # pylint: disable=unused-argument
 
     return Task.cont
 
+# MOVE-TO: control.py
+# TODO: Probably split this up, have a separate call for "shoot gun".
 def clicked():
     # NOTE: This kind of actor has nothing to do with the graphics kind.
     physicsNP = app.render.attachNewNode(ActorNode("smileyPhysics"))
