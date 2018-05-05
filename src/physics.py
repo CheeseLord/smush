@@ -14,6 +14,14 @@ COLLIDE_MASK_INTO_WALL   = BitMask32(0x2)
 COLLIDE_MASK_INTO_PLAYER = BitMask32(0x4)
 COLLIDE_MASK_INTO_ENTITY = BitMask32(0x8) # For misc entities flying around
 
+# Not used yet, but still define it preemptively because we'll probably want
+# it.
+app = None # pylint: disable=invalid-name
+
+def initPhysics(theApp):
+    global app # pylint: disable=invalid-name
+    app = theApp
+
 def onCollideEventIn(entry):
     log.debug("Collision detected IN.")
     # There, pylint, I used the parameter. Happy?

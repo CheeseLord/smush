@@ -8,7 +8,6 @@ from panda3d.core import Vec3
 from panda3d.physics import ActorNode
 
 from src.logconfig import newLogger
-from src.main import app
 from src.physics import COLLIDE_MASK_INTO_ENTITY
 from src.physics import COLLIDE_MASK_INTO_FLOOR
 from src.physics import COLLIDE_MASK_INTO_NONE
@@ -20,6 +19,16 @@ from src.world_config import GRAVITY_ACCEL
 log = newLogger(__name__)
 
 FRAMES_NEEDED_TO_WARP = 2
+
+# TODO: figure out something re: pylint and nonconstant globals
+app = None # pylint: disable=invalid-name
+
+def initControl(theApp):
+    # Why does 'global x' cause pylint to assume x is a constant? If I wanted
+    # to use x as a constant I'd just reference it; I wouldn't go to the
+    # trouble of adding a declaration that allows me to write to it.
+    global app # pylint: disable=invalid-name
+    app = theApp
 
 # We don't use task, but we can't remove it because the function signature
 # is from Panda3D.

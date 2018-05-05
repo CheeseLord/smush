@@ -1,7 +1,12 @@
 from src.logconfig import newLogger
-from src.main import app
 
 log = newLogger(__name__)
+
+app = None # pylint: disable=invalid-name
+
+def initGraphics(theApp):
+    global app # pylint: disable=invalid-name
+    app = theApp
 
 def toggleSmileyFrowney():
     if not app.smileyIsFrowney:
