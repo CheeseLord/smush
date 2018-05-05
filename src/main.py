@@ -252,7 +252,7 @@ class MyApp(ShowBase):
 # Other (unsorted)
 
 def onCollideEventIn(entry):
-    log.info("Collision detected IN.")
+    log.debug("Collision detected IN.")
     # There, pylint, I used the parameter. Happy?
     log.debug("    %s", entry)
 
@@ -264,7 +264,7 @@ def onCollideEventIn(entry):
 
 def onCollideEventOut(entry):
     # Note: I'm not sure we actually care about handling the "out" events.
-    log.info("Collision detected OUT.")
+    log.debug("Collision detected OUT.")
     log.debug("    %s", entry)
 
 def toggleSmileyFrowney():
