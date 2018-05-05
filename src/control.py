@@ -19,10 +19,8 @@ from src.world_config import GRAVITY_ACCEL
 
 log = newLogger(__name__)
 
-# MOVE-TO: control.py
 FRAMES_NEEDED_TO_WARP = 2
 
-# MOVE-TO: control.py
 # We don't use task, but we can't remove it because the function signature
 # is from Panda3D.
 def movePlayerTask(task):  # pylint: disable=unused-argument
@@ -105,7 +103,6 @@ def movePlayerTask(task):  # pylint: disable=unused-argument
 
     return Task.cont
 
-# MOVE-TO: control.py
 def controlCameraTask(task):  # pylint: disable=unused-argument
     # Degrees per pixel
     mouseGain = 0.25
@@ -167,7 +164,6 @@ def controlCameraTask(task):  # pylint: disable=unused-argument
 
     return Task.cont
 
-# MOVE-TO: control.py
 # TODO: Probably split this up, have a separate call for "shoot gun".
 def clicked():
     # NOTE: This kind of actor has nothing to do with the graphics kind.

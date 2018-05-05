@@ -3,7 +3,6 @@ from src.main import app
 
 log = newLogger(__name__)
 
-# MOVE-TO: graphics.py
 def toggleSmileyFrowney():
     if not app.smileyIsFrowney:
         app.smileyModel.detachNode()
