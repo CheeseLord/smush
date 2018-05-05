@@ -98,7 +98,10 @@ confidence=
 #     I really would like to have this one checked, though, for informational
 #     purposes.
 #     TODO: Find a way to reenable without blocking commits.
-disable=locally-disabled,bad-whitespace,missing-docstring,fixme,bad-builtin,wrong-import-order,too-few-public-methods,no-member,too-many-locals,too-many-public-methods,too-many-arguments,too-many-instance-attributes,too-many-branches,too-many-statements,duplicate-code
+# global-statement:
+#     Everyone hates globals. But like, sometimes you're writing a game, and
+#     there's some state that basically everyone needs to be aware of.
+disable=locally-disabled,bad-whitespace,missing-docstring,fixme,bad-builtin,wrong-import-order,too-few-public-methods,no-member,too-many-locals,too-many-public-methods,too-many-arguments,too-many-instance-attributes,too-many-branches,too-many-statements,duplicate-code,global-statement
 
 
 [REPORTS]
