@@ -3,19 +3,24 @@ import math
 from direct.task import Task
 from panda3d.core import CollisionNode
 from panda3d.core import CollisionSphere
-from panda3d.core import Point3
 from panda3d.core import Vec3
 from panda3d.physics import ActorNode
 
-from src import graphics # TODO[#2]
 from src import physics  # TODO[#2]
 
+from src.graphics import changePlayerHeadingPitch
+from src.graphics import getPlayerHeadingPitch
+from src.graphics import getPlayerHeadPos
+from src.graphics import getPlayerPos
+from src.graphics import getRelativePlayerHeadVector
+from src.graphics import getRelativePlayerVector
 from src.logconfig import newLogger
 from src.physics import COLLIDE_MASK_INTO_ENTITY
 from src.physics import COLLIDE_MASK_INTO_FLOOR
 from src.physics import COLLIDE_MASK_INTO_NONE
 from src.physics import COLLIDE_MASK_INTO_WALL
-from src.utils import constrainToInterval
+from src.physics import getPlayerVel
+from src.physics import setPlayerVel
 from src.utils import moveVectorTowardByAtMost
 from src.world_config import GRAVITY_ACCEL
 
@@ -39,6 +44,8 @@ def initControl(app_):
 
 # We don't use task, but we can't remove it because the function signature
 # is from Panda3D.
+# TODO: Rename this. This is the function that moves the player based on the
+# keyboard.
 def movePlayerTask(task):  # pylint: disable=unused-argument
     dt = app.globalClock.getDt()
 
@@ -78,24 +85,20 @@ def movePlayerTask(task):  # pylint: disable=unused-argument
     # instantaneously changing HPR.
     # x is sideways and y is forward. A positive rotation is to the left.
     rotateAmt = (turnLeft - turnRight) * rotateSpeed * dt
-    graphics.playerNP.setHpr(graphics.playerNP, rotateAmt, 0, 0)
+    changePlayerHeadingPitch(rotateAmt, 0)
 
     # Compute direction of target velocity in x,y-plane.
     netRunRight = moveRight - moveLeft
     netRunFwd   = moveFwd   - moveBack
     # TODO: Does this go before or after we add in the z?
-    targetVel = app.render.getRelativeVector(
-        graphics.playerNP,
-        Vec3(netRunRight, netRunFwd, 0)
-    )
+    targetVel = getRelativePlayerVector(Vec3(netRunRight, netRunFwd, 0))
 
     # Rescale to desired magnitude (if not zero).
     if netRunFwd != 0 or netRunRight != 0:
         targetVel *= maxSpeed / targetVel.length()
 
     # Copy z from current velocity.
-    playerPhysicsObj = graphics.playerNP.node().getPhysicsObject()
-    currPlayerVel = playerPhysicsObj.getVelocity()
+    currPlayerVel = getPlayerVel()
     playerZVel = currPlayerVel.getZ()
     targetVel += Vec3(0, 0, playerZVel)
 
@@ -109,16 +112,18 @@ def movePlayerTask(task):  # pylint: disable=unused-argument
     # that.
     # Also only allow jumping if they're not already going up. I don't know
     # how this can happen, but it has been observed.
-    if jump and -0.001 <= graphics.playerNP.getZ() <= 0.001 and \
-            playerZVel <= 0.001:
+    _, _, playerZ = getPlayerPos()
+    if jump and -0.001 <= playerZ <= 0.001 and playerZVel <= 0.001:
         jumpHeight = 1.1
         jumpSpeed = math.sqrt(2 * GRAVITY_ACCEL * jumpHeight)
         newPlayerVel += Vec3(0, 0, jumpSpeed)
 
-    playerPhysicsObj.setVelocity(newPlayerVel)
+    setPlayerVel(newPlayerVel)
 
     return Task.cont
 
+# TODO: Rename this. This is the function that moves the player based on the
+# mouse.
 def controlCameraTask(task):  # pylint: disable=unused-argument
     global successfulMouseWarps # pylint: disable=invalid-name
 
@@ -150,28 +155,7 @@ def controlCameraTask(task):  # pylint: disable=unused-argument
         # people being upside-down.
         deltaHeading = (mouseX - centerX) * -mouseGain
         deltaPitch   = (mouseY - centerY) * -mouseGain
-
-        # Note that the heading change is applied to the playerNP, while
-        # the pitch is applied to the playerHeadNP. You can use the mouse
-        # to turn from side to side, which affects your movement, but there
-        # is no way to tilt the player upward or downward because you're
-        # always standing upright.
-
-        # For heading, just adjust by the appropriate amount.
-        graphics.playerNP.setHpr(graphics.playerNP, deltaHeading, 0, 0)
-
-        # For pitch, we need to be more careful. If we just call setHpr to
-        # adjust the pitch, then Panda3D will apply the full rotation,
-        # which means you can wind up facing backwards. But if we then call
-        # getP() to get the pitch, it will still return a value between -90
-        # and 90, which means we can't fix it up after the fact. Instead,
-        # add the delta to the pitch outside of Panda3D, so that we can
-        # detect and fix the case where the player has tried to look too
-        # high or low (by capping them to just under 90 degrees in either
-        # direction).
-        newPitch = graphics.playerHeadNP.getP() + deltaPitch
-        newPitch = constrainToInterval(newPitch, -89, 89)
-        graphics.playerHeadNP.setP(newPitch)
+        changePlayerHeadingPitch(deltaHeading, deltaPitch)
 
     if mouseWarpSucceeded:
         # Prevent this value from growing out of control, on principle.
@@ -188,9 +172,8 @@ def clicked():
     physicsNP = app.render.attachNewNode(ActorNode("smileyPhysics"))
     app.physicsMgr.attachPhysicalNode(physicsNP.node())
 
-    playerVel = graphics.playerNP.node().getPhysicsObject().getVelocity()
-    bulletVel = app.render.getRelativeVector(graphics.playerHeadNP,
-                                             Vec3(0, 30, 0))
+    playerVel = getPlayerVel()
+    bulletVel = getRelativePlayerHeadVector(Vec3(0, 30, 0))
 
     # TODO: Also account for the player's angular velocity.
     physicsNP.node().getPhysicsObject().setVelocity(playerVel + bulletVel)
@@ -198,9 +181,11 @@ def clicked():
     ball = app.loader.loadModel("smiley")
     ball.reparentTo(physicsNP)
     ball.setScale(0.02)
-    physicsNP.setHpr(graphics.playerNP.getHpr())
-    physicsNP.setPos(app.render.getRelativePoint(graphics.playerHeadNP,
-                                                 Point3(0, 0, 0)))
+    # Intentionally don't set the pitch, because the balls can't roll and it
+    # would look weird if they were all stuck at different arbitrary pitches.
+    playerHeading, _ = getPlayerHeadingPitch()
+    physicsNP.setH(playerHeading)
+    physicsNP.setPos(getPlayerHeadPos())
 
     # Also add collision geometry to the bullet
     bulletColliderPhys = physicsNP.attachNewNode(

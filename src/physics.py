@@ -2,6 +2,8 @@ from panda3d.core import BitMask32
 from panda3d.physics import ForceNode
 from panda3d.physics import LinearVectorForce
 
+from src import graphics # TODO[#2]
+
 from src.graphics import toggleSmileyFrowney
 from src.logconfig import newLogger
 from src.world_config import GRAVITY_ACCEL
@@ -52,4 +54,13 @@ def onCollideEventOut(entry):
     # Note: I'm not sure we actually care about handling the "out" events.
     log.debug("Collision detected OUT.")
     log.debug("    %s", entry)
+
+def getPlayerVel():
+    return getPlayerPhysicsObj().getVelocity()
+
+def setPlayerVel(newVel):
+    getPlayerPhysicsObj().setVelocity(newVel)
+
+def getPlayerPhysicsObj():
+    return graphics.playerNP.node().getPhysicsObject()
 
