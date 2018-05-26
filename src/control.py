@@ -30,12 +30,12 @@ app = None # pylint: disable=invalid-name
 # up to FRAMES_NEEDED_TO_WARP.
 successfulMouseWarps = 0 # pylint: disable=invalid-name
 
-def initControl(theApp):
+def initControl(app_):
     # Why does 'global x' cause pylint to assume x is a constant? If I wanted
     # to use x as a constant I'd just reference it; I wouldn't go to the
     # trouble of adding a declaration that allows me to write to it.
     global app # pylint: disable=invalid-name
-    app = theApp
+    app = app_
 
 # We don't use task, but we can't remove it because the function signature
 # is from Panda3D.

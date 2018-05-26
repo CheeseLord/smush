@@ -11,8 +11,6 @@ from panda3d.core import Point3
 from panda3d.core import Vec3
 from panda3d.core import WindowProperties
 from panda3d.physics import ActorNode
-from panda3d.physics import ForceNode
-from panda3d.physics import LinearVectorForce
 from panda3d.physics import PhysicsCollisionHandler
 
 from src import graphics # TODO[#2]
@@ -31,7 +29,6 @@ from src.physics import COLLIDE_MASK_INTO_WALL
 from src.physics import initPhysics
 from src.physics import onCollideEventIn
 from src.physics import onCollideEventOut
-from src.world_config import GRAVITY_ACCEL
 from src.world_config import PLAYER_HEIGHT
 
 log = newLogger(__name__)
@@ -85,6 +82,11 @@ def main():
     # scale well. For now, though, it works.
     initModules(app)
 
+    app.initCollisionHandling()
+    app.initObjects()
+    app.initPlayer()
+    app.initKeyboardAndMouse()
+
     app.run()
 
     # Not reached; I think Panda3D calls sys.exit when you close the window.
@@ -125,27 +127,6 @@ class MyApp(ShowBase):
         # value 0. Can we just overwrite it in initPhysics and not initialize
         # it here at all?
         self.cTrav = CollisionTraverser()
-
-        # Note: I'm not entirely sure why pylint doesn't complain about all the
-        # attributes we define outside of init. Maybe it has something to do
-        # with this?
-        #     https://github.com/PyCQA/pylint/issues/192
-        # Specifically the comment:
-        #     "Don't emit 'attribute-defined-outside-init' if the attribute was
-        #     set by a function call in a defining method."
-        self.initPhysics()
-        self.initCollisionHandling()
-        self.initObjects()
-        self.initPlayer()
-        self.initKeyboardAndMouse()
-
-    def initPhysics(self):
-        # Start the physics (yes, with the particle engine).
-        self.enableParticles()
-        gravityNode = ForceNode("world-forces")
-        gravityForce = LinearVectorForce(0, 0, -GRAVITY_ACCEL)
-        gravityNode.addForce(gravityForce)
-        self.physicsMgr.addLinearForce(gravityForce)
 
     def initCollisionHandling(self):
         """

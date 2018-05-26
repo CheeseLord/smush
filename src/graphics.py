@@ -12,9 +12,9 @@ smileyNP     = None # pylint: disable=invalid-name
 smileyModel  = None # pylint: disable=invalid-name
 frowneyModel = None # pylint: disable=invalid-name
 
-def initGraphics(theApp):
+def initGraphics(app_):
     global app # pylint: disable=invalid-name
-    app = theApp
+    app = app_
 
 def toggleSmileyFrowney():
     global smileyIsFrowney # pylint: disable=invalid-name

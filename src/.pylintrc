@@ -182,7 +182,7 @@ attr-rgx=((_?[a-z][a-z0-9A-Z]*_?)|(__.*__))$
 # Allow one-character argument names because it's sometimes convenient and
 # harmless, but let's not overdo it. If it becomes a problem, we can change the
 # regex.
-argument-rgx=(([a-z][a-z0-9A-Z]*))$
+argument-rgx=(([a-z][a-z0-9A-Z]*_?))$
 
 # Naming hint for argument names
 # argument-name-hint=[a-z_][a-z0-9_]{2,30}$

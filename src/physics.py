@@ -1,7 +1,10 @@
 from panda3d.core import BitMask32
+from panda3d.physics import ForceNode
+from panda3d.physics import LinearVectorForce
 
 from src.graphics import toggleSmileyFrowney
 from src.logconfig import newLogger
+from src.world_config import GRAVITY_ACCEL
 
 log = newLogger(__name__)
 
@@ -21,9 +24,18 @@ app = None # pylint: disable=invalid-name
 physicsCollisionHandler = None # pylint: disable=invalid-name
 eventCollisionHandler   = None # pylint: disable=invalid-name
 
-def initPhysics(theApp):
+def initPhysics(app_):
     global app # pylint: disable=invalid-name
-    app = theApp
+    app = app_
+
+    # Starting the particle engine starts the physics.
+    app.enableParticles()
+
+    # Make gravity a thing.
+    gravityNode = ForceNode("world-forces")
+    gravityForce = LinearVectorForce(0, 0, -GRAVITY_ACCEL)
+    gravityNode.addForce(gravityForce)
+    app.physicsMgr.addLinearForce(gravityForce)
 
 def onCollideEventIn(entry):
     log.debug("Collision detected IN.")
