@@ -18,6 +18,9 @@ COLLIDE_MASK_INTO_ENTITY = BitMask32(0x8) # For misc entities flying around
 # it.
 app = None # pylint: disable=invalid-name
 
+physicsCollisionHandler = None # pylint: disable=invalid-name
+eventCollisionHandler   = None # pylint: disable=invalid-name
+
 def initPhysics(theApp):
     global app # pylint: disable=invalid-name
     app = theApp

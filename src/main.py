@@ -15,12 +15,14 @@ from panda3d.physics import ForceNode
 from panda3d.physics import LinearVectorForce
 from panda3d.physics import PhysicsCollisionHandler
 
+from src import graphics # TODO[#2]
+from src import physics  # TODO[#2]
+
 from src.control import clicked
 from src.control import controlCameraTask
 from src.control import initControl
 from src.control import movePlayerTask
 from src.graphics import initGraphics
-from src import graphics
 from src.logconfig import enableDebugLogging
 from src.logconfig import newLogger
 from src.physics import COLLIDE_MASK_INTO_FLOOR
@@ -143,21 +145,19 @@ class MyApp(ShowBase):
         are created.
         """
 
-        # MOVE-TO: Maybe have the canonical def. in physics, but also a
-        # reference as app.cTrav?
+        # MOVE-TO/TODO[#2]: Maybe have the canonical def. in physics, but also
+        # a reference as app.cTrav?
         self.cTrav = CollisionTraverser()
 
-        # MOVE-TO: physics.py (and have physics.py expose a function to add
-        # colliders)
+        # TODO[#2]: Have physics.py expose a function to add colliders
         # Used to handle collisions between physics-affected objects.
-        self.physicsCollisionHandler = PhysicsCollisionHandler()
+        physics.physicsCollisionHandler = PhysicsCollisionHandler()
 
-        # MOVE-TO: physics.py
         # Used to run custom code on collisions.
-        self.eventCollisionHandler = CollisionHandlerEvent()
+        physics.eventCollisionHandler = CollisionHandlerEvent()
 
-        self.eventCollisionHandler.addInPattern("%fn-into-%in")
-        self.eventCollisionHandler.addOutPattern("%fn-out-%in")
+        physics.eventCollisionHandler.addInPattern("%fn-into-%in")
+        physics.eventCollisionHandler.addOutPattern("%fn-out-%in")
 
         self.accept("BulletColliderEvt-into-SmileyCollide",
                     onCollideEventIn)
@@ -215,18 +215,18 @@ class MyApp(ShowBase):
         smileyCollide.node().addSolid(CollisionSphere(0, 0, 0, 1))
 
     def initPlayer(self):
-        # MOVE-TO: graphics.py (and expose functions to set pos and hpr).
+        # TODO[#2]: Functions in graphics.py to set pos and hpr.
+        # TODO[#2]: ...what about the physics code in control.py?
         # playerNP is at the player's feet, not their center of mass.
-        self.playerNP = self.render.attachNewNode(ActorNode("Player"))
-        self.playerNP.setPos(0, 0, 0)
-        self.physicsMgr.attachPhysicalNode(self.playerNP.node())
-        # MOVE-TO: graphics.py (and expose functions).
-        self.playerHeadNP = self.playerNP.attachNewNode("PlayerHead")
+        graphics.playerNP = self.render.attachNewNode(ActorNode("Player"))
+        graphics.playerNP.setPos(0, 0, 0)
+        self.physicsMgr.attachPhysicalNode(graphics.playerNP.node())
+        graphics.playerHeadNP = graphics.playerNP.attachNewNode("PlayerHead")
         # Put the player's head a little below the actual top of the player so
         # that if you're standing right under an object, the object is still
         # within your camera's viewing frustum.
-        self.playerHeadNP.setPos(0, 0, PLAYER_HEIGHT - 0.2)
-        self.camera.reparentTo(self.playerHeadNP)
+        graphics.playerHeadNP.setPos(0, 0, PLAYER_HEIGHT - 0.2)
+        self.camera.reparentTo(graphics.playerHeadNP)
         # Move the camera's near plane closer than the default (1) so that when
         # the player butts their head against a wall, they don't see through
         # it. In general, this distance should be close enough that the near
@@ -236,7 +236,7 @@ class MyApp(ShowBase):
         self.camLens.setNear(0.1)
 
         # For colliding the player with walls, floor, and other such obstacles.
-        playerCollider = self.playerNP.attachNewNode(
+        playerCollider = graphics.playerNP.attachNewNode(
             CollisionNode("playerCollider")
         )
         playerCollider.node().setIntoCollideMask(COLLIDE_MASK_INTO_PLAYER)
@@ -246,10 +246,10 @@ class MyApp(ShowBase):
             CollisionSphere(0, 0, 0.5 * PLAYER_HEIGHT, 0.5 * PLAYER_HEIGHT)
         )
 
-        self.physicsCollisionHandler.addCollider(playerCollider,
-                                                 self.playerNP)
+        physics.physicsCollisionHandler.addCollider(playerCollider,
+                                                    graphics.playerNP)
         self.cTrav.addCollider(playerCollider,
-                               self.physicsCollisionHandler)
+                               physics.physicsCollisionHandler)
 
     def initKeyboardAndMouse(self):
         # Hide the mouse.

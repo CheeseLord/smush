@@ -7,6 +7,9 @@ from panda3d.core import Point3
 from panda3d.core import Vec3
 from panda3d.physics import ActorNode
 
+from src import graphics # TODO[#2]
+from src import physics  # TODO[#2]
+
 from src.logconfig import newLogger
 from src.physics import COLLIDE_MASK_INTO_ENTITY
 from src.physics import COLLIDE_MASK_INTO_FLOOR
@@ -75,14 +78,14 @@ def movePlayerTask(task):  # pylint: disable=unused-argument
     # instantaneously changing HPR.
     # x is sideways and y is forward. A positive rotation is to the left.
     rotateAmt = (turnLeft - turnRight) * rotateSpeed * dt
-    app.playerNP.setHpr(app.playerNP, rotateAmt, 0, 0)
+    graphics.playerNP.setHpr(graphics.playerNP, rotateAmt, 0, 0)
 
     # Compute direction of target velocity in x,y-plane.
     netRunRight = moveRight - moveLeft
     netRunFwd   = moveFwd   - moveBack
     # TODO: Does this go before or after we add in the z?
     targetVel = app.render.getRelativeVector(
-        app.playerNP,
+        graphics.playerNP,
         Vec3(netRunRight, netRunFwd, 0)
     )
 
@@ -91,7 +94,7 @@ def movePlayerTask(task):  # pylint: disable=unused-argument
         targetVel *= maxSpeed / targetVel.length()
 
     # Copy z from current velocity.
-    playerPhysicsObj = app.playerNP.node().getPhysicsObject()
+    playerPhysicsObj = graphics.playerNP.node().getPhysicsObject()
     currPlayerVel = playerPhysicsObj.getVelocity()
     playerZVel = currPlayerVel.getZ()
     targetVel += Vec3(0, 0, playerZVel)
@@ -106,7 +109,7 @@ def movePlayerTask(task):  # pylint: disable=unused-argument
     # that.
     # Also only allow jumping if they're not already going up. I don't know
     # how this can happen, but it has been observed.
-    if jump and -0.001 <= app.playerNP.getZ() <= 0.001 and \
+    if jump and -0.001 <= graphics.playerNP.getZ() <= 0.001 and \
             playerZVel <= 0.001:
         jumpHeight = 1.1
         jumpSpeed = math.sqrt(2 * GRAVITY_ACCEL * jumpHeight)
@@ -155,7 +158,7 @@ def controlCameraTask(task):  # pylint: disable=unused-argument
         # always standing upright.
 
         # For heading, just adjust by the appropriate amount.
-        app.playerNP.setHpr(app.playerNP, deltaHeading, 0, 0)
+        graphics.playerNP.setHpr(graphics.playerNP, deltaHeading, 0, 0)
 
         # For pitch, we need to be more careful. If we just call setHpr to
         # adjust the pitch, then Panda3D will apply the full rotation,
@@ -166,9 +169,9 @@ def controlCameraTask(task):  # pylint: disable=unused-argument
         # detect and fix the case where the player has tried to look too
         # high or low (by capping them to just under 90 degrees in either
         # direction).
-        newPitch = app.playerHeadNP.getP() + deltaPitch
+        newPitch = graphics.playerHeadNP.getP() + deltaPitch
         newPitch = constrainToInterval(newPitch, -89, 89)
-        app.playerHeadNP.setP(newPitch)
+        graphics.playerHeadNP.setP(newPitch)
 
     if mouseWarpSucceeded:
         # Prevent this value from growing out of control, on principle.
@@ -185,8 +188,8 @@ def clicked():
     physicsNP = app.render.attachNewNode(ActorNode("smileyPhysics"))
     app.physicsMgr.attachPhysicalNode(physicsNP.node())
 
-    playerVel = app.playerNP.node().getPhysicsObject().getVelocity()
-    bulletVel = app.render.getRelativeVector(app.playerHeadNP,
+    playerVel = graphics.playerNP.node().getPhysicsObject().getVelocity()
+    bulletVel = app.render.getRelativeVector(graphics.playerHeadNP,
                                              Vec3(0, 30, 0))
 
     # TODO: Also account for the player's angular velocity.
@@ -195,8 +198,8 @@ def clicked():
     ball = app.loader.loadModel("smiley")
     ball.reparentTo(physicsNP)
     ball.setScale(0.02)
-    physicsNP.setHpr(app.playerNP.getHpr())
-    physicsNP.setPos(app.render.getRelativePoint(app.playerHeadNP,
+    physicsNP.setHpr(graphics.playerNP.getHpr())
+    physicsNP.setPos(app.render.getRelativePoint(graphics.playerHeadNP,
                                                  Point3(0, 0, 0)))
 
     # Also add collision geometry to the bullet
@@ -236,9 +239,9 @@ def clicked():
     bulletColliderEvt.node().addSolid(CollisionSphere(0, 0, 0, 0.02))
 
     # Handle collisions through physics via bulletColliderPhys.
-    app.physicsCollisionHandler.addCollider(bulletColliderPhys, physicsNP)
-    app.cTrav.addCollider(bulletColliderPhys, app.physicsCollisionHandler)
+    physics.physicsCollisionHandler.addCollider(bulletColliderPhys, physicsNP)
+    app.cTrav.addCollider(bulletColliderPhys, physics.physicsCollisionHandler)
 
     # Handle collisions in custom manner via bulletColliderEvt.
-    app.cTrav.addCollider(bulletColliderEvt, app.eventCollisionHandler)
+    app.cTrav.addCollider(bulletColliderEvt, physics.eventCollisionHandler)
 
