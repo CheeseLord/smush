@@ -103,6 +103,7 @@ class MyApp(ShowBase):
     def __init__(self):
         ShowBase.__init__(self)
 
+        # MOVE-TO: ???
         # This is available as a global, but pylint gives an undefined-variable
         # warning if we use it that way. Looking at
         #     https://www.panda3d.org/manual/index.php/ShowBase
