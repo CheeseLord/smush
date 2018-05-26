@@ -115,6 +115,7 @@ class MyApp(ShowBase):
         # self.globalClock everywhere else.
         self.globalClock = globalClock # pylint: disable=undefined-variable
 
+        # MOVE-TO: control.py
         # How many previous frames have we successfully warped the mouse? Only
         # tracked up to FRAMES_NEEDED_TO_WARP.
         # I would have initialized this in self.initKeyboardAndMouse, but
@@ -127,6 +128,7 @@ class MyApp(ShowBase):
         #     set by a function call in a defining method."
         self.successfulMouseWarps = 0
 
+        # MOVE-TO: graphics.py
         # This is just here to satisfy pylint's attribute-defined-outside-init.
         self.smileyIsFrowney = False
 
@@ -150,11 +152,16 @@ class MyApp(ShowBase):
         are created.
         """
 
+        # MOVE-TO: Maybe have the canonical def. in physics, but also a
+        # reference as app.cTrav?
         self.cTrav = CollisionTraverser()
 
+        # MOVE-TO: physics.py (and have physics.py expose a function to add
+        # colliders)
         # Used to handle collisions between physics-affected objects.
         self.physicsCollisionHandler = PhysicsCollisionHandler()
 
+        # MOVE-TO: physics.py
         # Used to run custom code on collisions.
         self.eventCollisionHandler = CollisionHandlerEvent()
 
@@ -175,6 +182,7 @@ class MyApp(ShowBase):
         graph.
         """
 
+        # MOVE-TO: graphics.py (or just make it a local in initObjects?)
         # Load the environment model.
         # TODO: Magic numbers bad (position and scale)
         self.scene = self.loader.loadModel("models/environment")
@@ -182,6 +190,7 @@ class MyApp(ShowBase):
         self.scene.setScale(0.25, 0.25, 0.25)
         self.scene.setPos(-8, 42, 0)
 
+        # MOVE-TO: nowhere. Make groundCollider a local.
         # Add collision geometry for the ground. For now, it's just an infinite
         # plane; eventually we should figure out how to actually match it with
         # the environment model.
@@ -196,6 +205,7 @@ class MyApp(ShowBase):
             CollisionPlane(Plane(Vec3(0, 0, 1), Point3(0, 0, 0)))
         )
 
+        # MOVE-TO: graphics.py
         # A floating spherical object which can be toggled between a smiley and
         # a frowney. Called the smiley for historical reasons.
         self.smileyNP = self.render.attachNewNode("SmileyNP")
@@ -205,11 +215,15 @@ class MyApp(ShowBase):
         # underground. At this point it's just for historical reasons.
         self.smileyNP.setPos(-5, 10, 1.25)
 
+        # MOVE-TO: graphics.py
         self.smileyModel = self.loader.loadModel("smiley")
         self.smileyModel.reparentTo(self.smileyNP)
+        # MOVE-TO: graphics.py
         self.frowneyModel = self.loader.loadModel("frowney")
+        # MOVE-TO: graphics.py
         self.smileyIsFrowney = False
 
+        # MOVE-TO: nowhere. Make smileyCollide a local.
         self.smileyCollide = self.smileyNP.attachNewNode(
             CollisionNode("SmileyCollide")
         )
@@ -219,10 +233,12 @@ class MyApp(ShowBase):
         self.smileyCollide.node().addSolid(CollisionSphere(0, 0, 0, 1))
 
     def initPlayer(self):
+        # MOVE-TO: graphics.py (and expose functions to set pos and hpr).
         # playerNP is at the player's feet, not their center of mass.
         self.playerNP = self.render.attachNewNode(ActorNode("Player"))
         self.playerNP.setPos(0, 0, 0)
         self.physicsMgr.attachPhysicalNode(self.playerNP.node())
+        # MOVE-TO: graphics.py (and expose functions).
         self.playerHeadNP = self.playerNP.attachNewNode("PlayerHead")
         # Put the player's head a little below the actual top of the player so
         # that if you're standing right under an object, the object is still
@@ -237,6 +253,7 @@ class MyApp(ShowBase):
         #     https://www.panda3d.org/manual/index.php/Lenses_and_Field_of_View
         self.camLens.setNear(0.1)
 
+        # MOVE-TO: nowhere (local)
         # For colliding the player with walls, floor, and other such obstacles.
         self.playerCollider = self.playerNP.attachNewNode(
             CollisionNode("playerCollider")
