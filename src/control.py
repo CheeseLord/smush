@@ -23,6 +23,10 @@ FRAMES_NEEDED_TO_WARP = 2
 # TODO: figure out something re: pylint and nonconstant globals
 app = None # pylint: disable=invalid-name
 
+# How many previous frames have we successfully warped the mouse? Only tracked
+# up to FRAMES_NEEDED_TO_WARP.
+successfulMouseWarps = 0 # pylint: disable=invalid-name
+
 def initControl(theApp):
     # Why does 'global x' cause pylint to assume x is a constant? If I wanted
     # to use x as a constant I'd just reference it; I wouldn't go to the
@@ -113,6 +117,8 @@ def movePlayerTask(task):  # pylint: disable=unused-argument
     return Task.cont
 
 def controlCameraTask(task):  # pylint: disable=unused-argument
+    global successfulMouseWarps # pylint: disable=invalid-name
+
     # Degrees per pixel
     mouseGain = 0.25
 
@@ -136,7 +142,7 @@ def controlCameraTask(task):  # pylint: disable=unused-argument
     # the mouse's current position can't be trusted to be a meaningful
     # relative value.
     if mouseWarpSucceeded and \
-            app.successfulMouseWarps >= FRAMES_NEEDED_TO_WARP:
+            successfulMouseWarps >= FRAMES_NEEDED_TO_WARP:
         # I don't know why these negative signs work but they stop the
         # people being upside-down.
         deltaHeading = (mouseX - centerX) * -mouseGain
@@ -166,10 +172,10 @@ def controlCameraTask(task):  # pylint: disable=unused-argument
 
     if mouseWarpSucceeded:
         # Prevent this value from growing out of control, on principle.
-        if app.successfulMouseWarps < FRAMES_NEEDED_TO_WARP:
-            app.successfulMouseWarps += 1
+        if successfulMouseWarps < FRAMES_NEEDED_TO_WARP:
+            successfulMouseWarps += 1
     else:
-        app.successfulMouseWarps = 0
+        successfulMouseWarps = 0
 
     return Task.cont
 
