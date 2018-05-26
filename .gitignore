@@ -107,3 +107,6 @@ ENV/
 # vim .swp files, so I can just "git add ." without catching them.
 .sw[nop]
 .*.sw[nop]
+
+# vscode for windows
+.vscode
