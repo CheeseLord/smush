@@ -51,7 +51,7 @@ def main():
     # are dumb. If you write:
     #     from x import y
     # then it binds the local name y to _the current value_ of x.y. But if x
-    # later overwrites x, then your module's variable y still refers to the old
+    # later overwrites y, then your module's variable y still refers to the old
     # value of x.y! See:
     #     https://docs.python.org/2.7/reference/
     #         simple_stmts.html#the-import-statement
