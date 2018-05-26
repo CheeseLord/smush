@@ -6,7 +6,6 @@ from panda3d.core import CollisionSphere
 from panda3d.core import Vec3
 from panda3d.physics import ActorNode
 
-from src import physics  # TODO[#2]
 
 from src.graphics import changePlayerHeadingPitch
 from src.graphics import getPlayerHeadingPitch
@@ -19,6 +18,7 @@ from src.physics import COLLIDE_MASK_INTO_ENTITY
 from src.physics import COLLIDE_MASK_INTO_FLOOR
 from src.physics import COLLIDE_MASK_INTO_NONE
 from src.physics import COLLIDE_MASK_INTO_WALL
+from src.physics import addBulletColliders
 from src.physics import getPlayerVel
 from src.physics import setPlayerVel
 from src.utils import moveVectorTowardByAtMost
@@ -223,10 +223,4 @@ def clicked():
                                                 COLLIDE_MASK_INTO_ENTITY)
     bulletColliderEvt.node().addSolid(CollisionSphere(0, 0, 0, 0.02))
 
-    # Handle collisions through physics via bulletColliderPhys.
-    physics.physicsCollisionHandler.addCollider(bulletColliderPhys, physicsNP)
-    app.cTrav.addCollider(bulletColliderPhys, physics.physicsCollisionHandler)
-
-    # Handle collisions in custom manner via bulletColliderEvt.
-    app.cTrav.addCollider(bulletColliderEvt, physics.eventCollisionHandler)
-
+    addBulletColliders(bulletColliderPhys, bulletColliderEvt, physicsNP)

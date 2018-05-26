@@ -64,3 +64,10 @@ def setPlayerVel(newVel):
 def getPlayerPhysicsObj():
     return graphics.playerNP.node().getPhysicsObject()
 
+def addBulletColliders(bulletColliderPhys, bulletColliderEvt, physicsNP):
+    # Handle collisions through physics via bulletColliderPhys.
+    physicsCollisionHandler.addCollider(bulletColliderPhys, physicsNP)
+    app.cTrav.addCollider(bulletColliderPhys, physicsCollisionHandler)
+
+    # Handle collisions in custom manner via bulletColliderEvt.
+    app.cTrav.addCollider(bulletColliderEvt, eventCollisionHandler)
