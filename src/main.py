@@ -119,6 +119,13 @@ class MyApp(ShowBase):
         # self.globalClock everywhere else.
         self.globalClock = globalClock # pylint: disable=undefined-variable
 
+        # MOVE-TO/TODO[#2]: Maybe have the canonical def. in physics, but also
+        # a reference as app.cTrav?
+        # TODO[#2]: cTrav exists before we initialize it here; it just has the
+        # value 0. Can we just overwrite it in initPhysics and not initialize
+        # it here at all?
+        self.cTrav = CollisionTraverser()
+
         # Note: I'm not entirely sure why pylint doesn't complain about all the
         # attributes we define outside of init. Maybe it has something to do
         # with this?
@@ -145,10 +152,6 @@ class MyApp(ShowBase):
         Initialize the collision handlers. This must be run before any objects
         are created.
         """
-
-        # MOVE-TO/TODO[#2]: Maybe have the canonical def. in physics, but also
-        # a reference as app.cTrav?
-        self.cTrav = CollisionTraverser()
 
         # TODO[#2]: Have physics.py expose a function to add colliders
         # Used to handle collisions between physics-affected objects.
