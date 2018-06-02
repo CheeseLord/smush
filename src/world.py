@@ -33,7 +33,7 @@ def initWorld(app_):
     app = app_
 
     # TODO: Magic numbers bad (position and scale)
-    scene = app.loader.loadModel("models/environment")
+    scene = loadExampleModel("environment")
     scene.reparentTo(app.render)
     scene.setScale(0.25, 0.25, 0.25)
     scene.setPos(-8, 42, 0)
@@ -67,9 +67,9 @@ def initWorld(app_):
     # underground. At this point it's just for historical reasons.
     graphics.smileyNP.setPos(-5, 10, 1.25)
 
-    graphics.smileyModel = app.loader.loadModel("smiley")
+    graphics.smileyModel = loadExampleModel("smiley")
     graphics.smileyModel.reparentTo(graphics.smileyNP)
-    graphics.frowneyModel = app.loader.loadModel("frowney")
+    graphics.frowneyModel = loadExampleModel("frowney")
 
     smileyCollide = graphics.smileyNP.attachNewNode(
         CollisionNode("SmileyCollide")
@@ -131,4 +131,7 @@ def loadModel(modelName):
     modelsDir = repository + 'assets/models/'
 
     return app.loader.loadModel(modelsDir + modelName)
+
+def loadExampleModel(modelName):
+    return app.loader.loadModel(modelName)
 
