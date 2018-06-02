@@ -33,16 +33,17 @@ def initWorld(app_):
     app = app_
 
     # TODO: Magic numbers bad (position and scale)
-    scene = loadExampleModel("environment")
-    scene.reparentTo(app.render)
-    scene.setScale(0.25, 0.25, 0.25)
-    scene.setPos(-8, 42, 0)
+    # scene = loadExampleModel("environment")
+    # scene.reparentTo(app.render)
+    # scene.setScale(0.25, 0.25, 0.25)
+    # scene.setPos(-8, 42, 0)
 
-    # Don't mind me, just testing a thing.
-    rect = loadModel("red-square.egg")
-    rect.reparentTo(app.render)
-    rect.setPos(0, 0, 3)
-    rect.setHpr(0, 0, 180)
+    # TODO: Magic numbers bad (hardcoded based on the squares being 2x2).
+    for x in range(-7, 7+1, 2):
+        for y in range(-13, 13+1, 2):
+            floorTile = loadModel("red-square.egg")
+            floorTile.reparentTo(app.render)
+            floorTile.setPos(x, y, 0)
 
     # Add collision geometry for the ground. For now, it's just an infinite
     # plane; eventually we should figure out how to actually match it with
