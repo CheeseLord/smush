@@ -2,6 +2,7 @@ import math
 import sys
 
 from direct.task import Task
+from panda3d.core import ClockObject
 from panda3d.core import CollisionNode
 from panda3d.core import CollisionSphere
 from panda3d.core import Vec3
@@ -72,7 +73,7 @@ def initKeyboardAndMouse():
 # TODO: Rename this. This is the function that moves the player based on the
 # keyboard.
 def movePlayerTask(task):  # pylint: disable=unused-argument
-    dt = app.globalClock.getDt()
+    dt = ClockObject.getGlobalClock().getDt()
 
     # TODO: Blah blah magic numbers bad. But actually though, can we put
     # all these in a config file?

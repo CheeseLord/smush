@@ -80,22 +80,6 @@ class MyApp(ShowBase):
     def __init__(self):
         ShowBase.__init__(self)
 
-        # MOVE-TO: ???
-        # This is available as a global, but pylint gives an undefined-variable
-        # warning if we use it that way. Looking at
-        #     https://www.panda3d.org/manual/index.php/ShowBase
-        # I would have thought we could reference it as either
-        # self.globalClock, direct.showbase.ShowBase.globalClock, or possibly
-        # direct.showbase.globalClock, but none of those seems to work. In
-        # WaRTS, we got around this by creating it here (using
-        # ClockObject.getGlobalClock()), but now pylint complains about even
-        # that because it doesn't think the name ClockObject is present in
-        # panda3d.core. Since we're going to have to suppress a pylint warning
-        # anyway, just read the global here into an instance variable, so we
-        # can suppress one undefined-variable here and then just use
-        # self.globalClock everywhere else.
-        self.globalClock = globalClock # pylint: disable=undefined-variable
-
         # MOVE-TO/TODO[#2]: Maybe have the canonical def. in physics, but also
         # a reference as app.cTrav?
         # TODO[#2]: cTrav exists before we initialize it here; it just has the
