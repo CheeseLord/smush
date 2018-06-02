@@ -19,6 +19,11 @@ from src.physics import COLLIDE_MASK_INTO_PLAYER  # TODO[#2]
 from src.physics import COLLIDE_MASK_INTO_WALL    # TODO[#2]
 from src.world_config import PLAYER_HEIGHT
 
+MIN_X =  -7
+MAX_X =   7
+MIN_Y = -13
+MAX_Y =  13
+
 log = newLogger(__name__)
 
 app = None
@@ -39,11 +44,64 @@ def initWorld(app_):
     # scene.setPos(-8, 42, 0)
 
     # TODO: Magic numbers bad (hardcoded based on the squares being 2x2).
-    for x in range(-7, 7+1, 2):
-        for y in range(-13, 13+1, 2):
+
+    # Floor
+    for x in range(MIN_X, MAX_X+1, 2):
+        for y in range(MIN_Y, MAX_Y+1, 2):
             floorTile = loadModel("red-square.egg")
             floorTile.reparentTo(app.render)
             floorTile.setPos(x, y, 0)
+
+    # North wall
+    for x in range(MIN_X, MAX_X+1, 2):
+        wallTile = loadModel("green-square.egg")
+        wallTile.reparentTo(app.render)
+        # TODO: Make the models [0,1]x[0,1]
+        wallTile.setPos(x, MAX_Y+1, 1)
+        wallTile.setHpr(0, 90, 0)
+
+    # South wall
+    for x in range(MIN_X, MAX_X+1, 2):
+        wallTile = loadModel("green-square.egg")
+        wallTile.reparentTo(app.render)
+        wallTile.setPos(x, MIN_Y-1, 1)
+        wallTile.setHpr(0, 90, 180)
+
+    # West wall
+    for y in range(MIN_Y, MAX_Y+1, 2):
+        wallTile = loadModel("green-square.egg")
+        wallTile.reparentTo(app.render)
+        wallTile.setPos(MIN_X-1, y, 1)
+        wallTile.setHpr(0, 90, 90)
+
+    # East wall
+    for y in range(MIN_Y, MAX_Y+1, 2):
+        wallTile = loadModel("green-square.egg")
+        wallTile.reparentTo(app.render)
+        wallTile.setPos(MAX_X+1, y, 1)
+        wallTile.setHpr(0, 90, -90)
+
+    # For testing orientations
+    #
+    # rect1 = loadModel("green-square.egg")
+    # rect1.reparentTo(app.render)
+    # rect1.setPos(2, 0, 1.5)
+    # rect1.setHpr(0, 0, 0)
+    #
+    # rect2 = loadModel("green-square.egg")
+    # rect2.reparentTo(app.render)
+    # rect2.setPos(4, 0, 1.5)
+    # rect2.setHpr(135, 0, 0)
+    #
+    # rect3 = loadModel("green-square.egg")
+    # rect3.reparentTo(app.render)
+    # rect3.setPos(6, 0, 1.5)
+    # rect3.setHpr(0, 135, 0)
+    #
+    # rect4 = loadModel("green-square.egg")
+    # rect4.reparentTo(app.render)
+    # rect4.setPos(8, 0, 1.5)
+    # rect4.setHpr(0, 0, 135)
 
     # Add collision geometry for the ground. For now, it's just an infinite
     # plane; eventually we should figure out how to actually match it with
