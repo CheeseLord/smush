@@ -1,6 +1,10 @@
+import os
+import sys
+
 from panda3d.core import CollisionNode
 from panda3d.core import CollisionPlane
 from panda3d.core import CollisionSphere
+from panda3d.core import Filename
 from panda3d.core import Plane
 from panda3d.core import Point3
 from panda3d.core import Vec3
@@ -33,6 +37,12 @@ def initWorld(app_):
     scene.reparentTo(app.render)
     scene.setScale(0.25, 0.25, 0.25)
     scene.setPos(-8, 42, 0)
+
+    # Don't mind me, just testing a thing.
+    rect = loadModel("red-square.egg")
+    rect.reparentTo(app.render)
+    rect.setPos(0, 0, 3)
+    rect.setHpr(0, 0, 180)
 
     # Add collision geometry for the ground. For now, it's just an infinite
     # plane; eventually we should figure out how to actually match it with
@@ -103,4 +113,22 @@ def initWorld(app_):
     physics.physicsCollisionHandler.addCollider(playerCollider,
                                                 graphics.playerNP)
     app.cTrav.addCollider(playerCollider, physics.physicsCollisionHandler)
+
+
+def loadModel(modelName):
+    """
+    Load and return a Panda3D model given a path. The modelName is relative to
+    the repo's assets/models directory.
+    """
+
+    # Instructions for loading models at:
+    #    https://www.panda3d.org/manual/index.php/Loading_Models
+
+    repository = os.path.abspath(sys.path[0])
+    repository = Filename.fromOsSpecific(repository).getFullpath()
+    if not repository.endswith('/'):
+        repository += '/'
+    modelsDir = repository + 'assets/models/'
+
+    return app.loader.loadModel(modelsDir + modelName)
 
