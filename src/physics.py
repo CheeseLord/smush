@@ -1,5 +1,6 @@
 from panda3d.core import BitMask32
 from panda3d.core import CollisionHandlerEvent
+from panda3d.core import CollisionTraverser
 from panda3d.physics import ForceNode
 from panda3d.physics import LinearVectorForce
 from panda3d.physics import PhysicsCollisionHandler
@@ -51,6 +52,11 @@ def initCollisionHandling():
 
     global physicsCollisionHandler
     global eventCollisionHandler
+
+    # Note: app already has a cTrav before this line, but its set to the value
+    # 0. So we are not defining a new member outside of __init__; we're just
+    # overwriting an existing one.
+    app.cTrav = CollisionTraverser()
 
     # TODO[#2]: Have physics.py expose a function to add colliders
     # Used to handle collisions between physics-affected objects.

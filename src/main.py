@@ -1,5 +1,4 @@
 from direct.showbase.ShowBase import ShowBase
-from panda3d.core import CollisionTraverser
 
 from src.control import initControl
 from src.graphics import initGraphics
@@ -79,14 +78,6 @@ class MyApp(ShowBase):
 
     def __init__(self):
         ShowBase.__init__(self)
-
-        # MOVE-TO/TODO[#2]: Maybe have the canonical def. in physics, but also
-        # a reference as app.cTrav?
-        # TODO[#2]: cTrav exists before we initialize it here; it just has the
-        # value 0. Can we just overwrite it in initPhysics and not initialize
-        # it here at all?
-        self.cTrav = CollisionTraverser()
-
 
 if __name__ == "__main__":
     main()
