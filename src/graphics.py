@@ -5,22 +5,22 @@ from src.utils import constrainToInterval
 
 log = newLogger(__name__)
 
-app = None # pylint: disable=invalid-name
+app = None
 
-playerNP     = None # pylint: disable=invalid-name
-playerHeadNP = None # pylint: disable=invalid-name
+playerNP     = None
+playerHeadNP = None
 
-smileyIsFrowney = False # pylint: disable=invalid-name
-smileyNP     = None # pylint: disable=invalid-name
-smileyModel  = None # pylint: disable=invalid-name
-frowneyModel = None # pylint: disable=invalid-name
+smileyIsFrowney = False
+smileyNP     = None
+smileyModel  = None
+frowneyModel = None
 
 def initGraphics(app_):
-    global app # pylint: disable=invalid-name
+    global app
     app = app_
 
 def toggleSmileyFrowney():
-    global smileyIsFrowney # pylint: disable=invalid-name
+    global smileyIsFrowney
     if not smileyIsFrowney:
         smileyModel.detachNode()
         frowneyModel.reparentTo(smileyNP)

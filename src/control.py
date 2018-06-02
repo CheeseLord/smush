@@ -28,18 +28,17 @@ log = newLogger(__name__)
 
 FRAMES_NEEDED_TO_WARP = 2
 
-# TODO: figure out something re: pylint and nonconstant globals
-app = None # pylint: disable=invalid-name
+app = None
 
 # How many previous frames have we successfully warped the mouse? Only tracked
 # up to FRAMES_NEEDED_TO_WARP.
-successfulMouseWarps = 0 # pylint: disable=invalid-name
+successfulMouseWarps = 0
 
 def initControl(app_):
     # Why does 'global x' cause pylint to assume x is a constant? If I wanted
     # to use x as a constant I'd just reference it; I wouldn't go to the
     # trouble of adding a declaration that allows me to write to it.
-    global app # pylint: disable=invalid-name
+    global app
     app = app_
 
 # We don't use task, but we can't remove it because the function signature
@@ -125,7 +124,7 @@ def movePlayerTask(task):  # pylint: disable=unused-argument
 # TODO: Rename this. This is the function that moves the player based on the
 # mouse.
 def controlCameraTask(task):  # pylint: disable=unused-argument
-    global successfulMouseWarps # pylint: disable=invalid-name
+    global successfulMouseWarps
 
     # Degrees per pixel
     mouseGain = 0.25

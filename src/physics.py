@@ -23,13 +23,13 @@ COLLIDE_MASK_INTO_ENTITY = BitMask32(0x8) # For misc entities flying around
 
 # Not used yet, but still define it preemptively because we'll probably want
 # it.
-app = None # pylint: disable=invalid-name
+app = None
 
-physicsCollisionHandler = None # pylint: disable=invalid-name
-eventCollisionHandler   = None # pylint: disable=invalid-name
+physicsCollisionHandler = None
+eventCollisionHandler   = None
 
 def initPhysics(app_):
-    global app # pylint: disable=invalid-name
+    global app
     app = app_
 
     # Starting the particle engine starts the physics.
@@ -49,8 +49,8 @@ def initCollisionHandling():
     created.
     """
 
-    global physicsCollisionHandler # pylint: disable=invalid-name
-    global eventCollisionHandler   # pylint: disable=invalid-name
+    global physicsCollisionHandler
+    global eventCollisionHandler
 
     # TODO[#2]: Have physics.py expose a function to add colliders
     # Used to handle collisions between physics-affected objects.
