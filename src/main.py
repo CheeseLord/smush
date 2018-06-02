@@ -21,7 +21,7 @@ def main():
     else:
         log.info("Debug logging disabled.")
 
-    app = MyApp()
+    app = ShowBase()
 
     # Sigh. Other modules can't just import app from us, because Python imports
     # are dumb. If you write:
@@ -70,14 +70,6 @@ def initModules(app):
     initGraphics(app)
     initWorld(app)
 
-
-class MyApp(ShowBase):
-
-    ###########################################################################
-    # Initialization
-
-    def __init__(self):
-        ShowBase.__init__(self)
 
 if __name__ == "__main__":
     main()
