@@ -1,7 +1,6 @@
 import sys
 
 from direct.showbase.ShowBase import ShowBase
-from panda3d.core import CollisionHandlerEvent
 from panda3d.core import CollisionNode
 from panda3d.core import CollisionPlane
 from panda3d.core import CollisionSphere
@@ -11,7 +10,6 @@ from panda3d.core import Point3
 from panda3d.core import Vec3
 from panda3d.core import WindowProperties
 from panda3d.physics import ActorNode
-from panda3d.physics import PhysicsCollisionHandler
 
 from src import graphics # TODO[#2]
 from src import physics  # TODO[#2]
@@ -27,8 +25,6 @@ from src.physics import COLLIDE_MASK_INTO_FLOOR
 from src.physics import COLLIDE_MASK_INTO_PLAYER
 from src.physics import COLLIDE_MASK_INTO_WALL
 from src.physics import initPhysics
-from src.physics import onCollideEventIn
-from src.physics import onCollideEventOut
 from src.world_config import PLAYER_HEIGHT
 
 log = newLogger(__name__)
@@ -82,7 +78,6 @@ def main():
     # scale well. For now, though, it works.
     initModules(app)
 
-    app.initCollisionHandling()
     app.initObjects()
     app.initPlayer()
     app.initKeyboardAndMouse()
@@ -93,9 +88,9 @@ def main():
     log.info("End.")
 
 def initModules(app):
+    initPhysics(app)
     initControl(app)
     initGraphics(app)
-    initPhysics(app)
 
 class MyApp(ShowBase):
 
@@ -127,27 +122,6 @@ class MyApp(ShowBase):
         # value 0. Can we just overwrite it in initPhysics and not initialize
         # it here at all?
         self.cTrav = CollisionTraverser()
-
-    def initCollisionHandling(self):
-        """
-        Initialize the collision handlers. This must be run before any objects
-        are created.
-        """
-
-        # TODO[#2]: Have physics.py expose a function to add colliders
-        # Used to handle collisions between physics-affected objects.
-        physics.physicsCollisionHandler = PhysicsCollisionHandler()
-
-        # Used to run custom code on collisions.
-        physics.eventCollisionHandler = CollisionHandlerEvent()
-
-        physics.eventCollisionHandler.addInPattern("%fn-into-%in")
-        physics.eventCollisionHandler.addOutPattern("%fn-out-%in")
-
-        self.accept("BulletColliderEvt-into-SmileyCollide",
-                    onCollideEventIn)
-        self.accept("BulletColliderEvt-out-SmileyCollide",
-                    onCollideEventOut)
 
     def initObjects(self):
         """

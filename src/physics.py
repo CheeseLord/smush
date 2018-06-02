@@ -1,6 +1,8 @@
 from panda3d.core import BitMask32
 from panda3d.physics import ForceNode
 from panda3d.physics import LinearVectorForce
+from panda3d.core import CollisionHandlerEvent
+from panda3d.physics import PhysicsCollisionHandler
 
 from src import graphics # TODO[#2]
 
@@ -38,6 +40,31 @@ def initPhysics(app_):
     gravityForce = LinearVectorForce(0, 0, -GRAVITY_ACCEL)
     gravityNode.addForce(gravityForce)
     app.physicsMgr.addLinearForce(gravityForce)
+
+    initCollisionHandling()
+
+def initCollisionHandling():
+    """
+    Initialize the collision handlers. This must be run before any objects are
+    created.
+    """
+
+    global physicsCollisionHandler # pylint: disable=invalid-name
+    global eventCollisionHandler   # pylint: disable=invalid-name
+
+    # TODO[#2]: Have physics.py expose a function to add colliders
+    # Used to handle collisions between physics-affected objects.
+    physicsCollisionHandler = PhysicsCollisionHandler()
+
+    # Used to run custom code on collisions.
+    eventCollisionHandler = CollisionHandlerEvent()
+
+    eventCollisionHandler.addInPattern("%fn-into-%in")
+    eventCollisionHandler.addOutPattern("%fn-out-%in")
+
+    # TODO[#2]: These don't belong here... where do they belong? initWorld?
+    app.accept("BulletColliderEvt-into-SmileyCollide", onCollideEventIn)
+    app.accept("BulletColliderEvt-out-SmileyCollide",  onCollideEventOut)
 
 def onCollideEventIn(entry):
     log.debug("Collision detected IN.")
