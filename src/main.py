@@ -1,5 +1,3 @@
-import sys
-
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import CollisionNode
 from panda3d.core import CollisionPlane
@@ -8,16 +6,12 @@ from panda3d.core import CollisionTraverser
 from panda3d.core import Plane
 from panda3d.core import Point3
 from panda3d.core import Vec3
-from panda3d.core import WindowProperties
 from panda3d.physics import ActorNode
 
 from src import graphics # TODO[#2]
 from src import physics  # TODO[#2]
 
-from src.control import clicked
-from src.control import controlCameraTask
 from src.control import initControl
-from src.control import movePlayerTask
 from src.graphics import initGraphics
 from src.logconfig import enableDebugLogging
 from src.logconfig import newLogger
@@ -80,7 +74,6 @@ def main():
 
     app.initObjects()
     app.initPlayer()
-    app.initKeyboardAndMouse()
 
     app.run()
 
@@ -209,29 +202,6 @@ class MyApp(ShowBase):
                                                     graphics.playerNP)
         self.cTrav.addCollider(playerCollider,
                                physics.physicsCollisionHandler)
-
-    def initKeyboardAndMouse(self):
-        # Hide the mouse.
-        self.disableMouse()
-        props = WindowProperties()
-        props.setCursorHidden(True)
-        self.win.requestProperties(props)
-
-        # Provide a way to exit even when we make the window fullscreen.
-        self.accept('control-q', sys.exit)
-
-        # Handle the mouse.
-        self.accept("mouse1", clicked, [])
-
-        # Camera toggle.
-        # self.accept("f3",       self.toggleCameraStyle, [])
-
-        # Handle window close request (clicking the X, Alt-F4, etc.)
-        # self.win.set_close_request_event("window-close")
-        # self.accept("window-close", self.handleWindowClose)
-
-        self.taskMgr.add(controlCameraTask, "ControlCameraTask")
-        self.taskMgr.add(movePlayerTask,    "MovePlayerTask")
 
 
 if __name__ == "__main__":

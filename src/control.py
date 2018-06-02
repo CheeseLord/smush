@@ -1,11 +1,12 @@
 import math
+import sys
 
 from direct.task import Task
 from panda3d.core import CollisionNode
 from panda3d.core import CollisionSphere
 from panda3d.core import Vec3
+from panda3d.core import WindowProperties
 from panda3d.physics import ActorNode
-
 
 from src.graphics import changePlayerHeadingPitch
 from src.graphics import getPlayerHeadingPitch
@@ -40,6 +41,31 @@ def initControl(app_):
     # trouble of adding a declaration that allows me to write to it.
     global app
     app = app_
+
+    initKeyboardAndMouse()
+
+def initKeyboardAndMouse():
+    # Hide the mouse.
+    app.disableMouse()
+    props = WindowProperties()
+    props.setCursorHidden(True)
+    app.win.requestProperties(props)
+
+    # Provide a way to exit even when we make the window fullscreen.
+    app.accept('control-q', sys.exit)
+
+    # Handle the mouse.
+    app.accept("mouse1", clicked, [])
+
+    # Camera toggle.
+    # app.accept("f3", toggleCameraStyle, [])
+
+    # Handle window close request (clicking the X, Alt-F4, etc.)
+    # app.win.set_close_request_event("window-close")
+    # app.accept("window-close", handleWindowClose)
+
+    app.taskMgr.add(controlCameraTask, "ControlCameraTask")
+    app.taskMgr.add(movePlayerTask,    "MovePlayerTask")
 
 # We don't use task, but we can't remove it because the function signature
 # is from Panda3D.
