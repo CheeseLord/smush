@@ -1,7 +1,7 @@
 from panda3d.core import BitMask32
+from panda3d.core import CollisionHandlerEvent
 from panda3d.physics import ForceNode
 from panda3d.physics import LinearVectorForce
-from panda3d.core import CollisionHandlerEvent
 from panda3d.physics import PhysicsCollisionHandler
 
 from src import graphics # TODO[#2]
