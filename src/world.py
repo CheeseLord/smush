@@ -1,12 +1,15 @@
 import os
 import sys
 
+from panda3d.core import AmbientLight
 from panda3d.core import CollisionNode
 from panda3d.core import CollisionPlane
 from panda3d.core import CollisionSphere
+from panda3d.core import DirectionalLight
 from panda3d.core import Filename
 from panda3d.core import Plane
 from panda3d.core import Point3
+from panda3d.core import VBase4
 from panda3d.core import Vec3
 from panda3d.physics import ActorNode
 
@@ -36,6 +39,23 @@ def initWorld(app_):
 
     global app
     app = app_
+
+    # TODO: Magic numbers bad (lighting parameters)
+    # ambient lighting
+    ambientLight = AmbientLight("ambientLight")
+    ambientLight.setColor(VBase4(0.1, 0.1, 0.1, 1))
+    ambientLightNP = app.render.attachNewNode(ambientLight)
+    app.render.setLight(ambientLightNP)
+
+    # Directional lighting
+    directionalLight = DirectionalLight("directionalLight")
+    directionalLight.setColor(VBase4(0.8, 0.8, 0.8, 1))
+    directionalLightNP = app.render.attachNewNode(directionalLight)
+    # direction
+    directionalLightNP.setHpr(180, -20, 0)
+    app.render.setLight(directionalLightNP)
+
+
 
     # TODO: Magic numbers bad (position and scale)
     # scene = loadExampleModel("environment")
