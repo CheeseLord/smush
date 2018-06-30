@@ -5,9 +5,9 @@ from panda3d.core import AmbientLight
 from panda3d.core import CollisionNode
 from panda3d.core import CollisionPlane
 from panda3d.core import CollisionSphere
-from panda3d.core import DirectionalLight
 from panda3d.core import Filename
 from panda3d.core import Plane
+from panda3d.core import PointLight
 from panda3d.core import Point3
 from panda3d.core import VBase4
 from panda3d.core import Vec3
@@ -41,6 +41,10 @@ def initWorld(app_):
     global app
     app = app_
 
+    # FIXME this is probably a horrrible idea but
+    # enable shader generation for the entire game
+    app.render.setShaderAuto()
+
     # TODO: Magic numbers bad (lighting parameters)
     # ambient lighting
     ambientLight = AmbientLight("ambientLight")
@@ -48,14 +52,14 @@ def initWorld(app_):
     ambientLightNP = app.render.attachNewNode(ambientLight)
     app.render.setLight(ambientLightNP)
 
-    # Directional lighting
-    directionalLight = DirectionalLight("directionalLight")
-    directionalLight.setColor(VBase4(0.8, 0.8, 0.8, 1))
-    directionalLightNP = app.render.attachNewNode(directionalLight)
-    # direction
-    directionalLightNP.setHpr(180, -20, 0)
-    app.render.setLight(directionalLightNP)
-
+    # point lighting
+    pointLight = PointLight("pointLight")
+    pointLight.setColor(VBase4(0.8, 0.8, 0.8, 1))
+    # Use a 512 x 512 resolution shadow map
+    pointLight.setShadowCaster(True, 512, 512)
+    pointLightNP = app.render.attachNewNode(pointLight)
+    pointLightNP.setPos(0,0,30)
+    app.render.setLight(pointLightNP)
 
 
     # TODO: Magic numbers bad (position and scale)
