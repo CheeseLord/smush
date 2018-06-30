@@ -5,7 +5,6 @@ from panda3d.core import CollisionNode
 from panda3d.core import CollisionPolygon
 from panda3d.core import Filename
 from panda3d.core import Point3
-from panda3d.physics import ActorNode
 
 from src.physics import COLLIDE_MASK_INTO_WALL
 
@@ -53,7 +52,7 @@ class Wall(object):
         #       - self.collisionNP
         #           - self.collisionGeom
 
-        self.rootNP = render.attachNewNode(ActorNode("Wall"))
+        self.rootNP = render.attachNewNode("Wall")
         self.rootNP.setPos(pos)
         self.rootNP.setHpr(hpr)
 
