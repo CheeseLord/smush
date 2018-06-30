@@ -198,6 +198,11 @@ def clicked():
     physicsNP = app.render.attachNewNode(ActorNode("smileyPhysics"))
     app.physicsMgr.attachPhysicalNode(physicsNP.node())
 
+    # Note: see
+    #     https://www.panda3d.org/manual/index.php/
+    #         Bullet_Continuous_Collision_Detection
+    # for an alternate strategy for aiming a bullet where the player is
+    # looking. The example code there uses base.camLens.extrude.
     playerVel = getPlayerVel()
     bulletVel = getRelativePlayerHeadVector(Vec3(0, 30, 0))
 
