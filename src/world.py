@@ -101,7 +101,7 @@ def initWorld(app_):
     # Proof-of-concept for creating a single model for a wall or floor and just
     # tiling the texture.
     tmpNP = app.render.attachNewNode("Tmp")
-    tmpModel = loadModel("red-square.egg")
+    tmpModel = loadModel("unit-tile-notex.egg")
     tmpModel.reparentTo(tmpNP)
     tmpTex = app.loader.loadTexture("assets/models/tex/green-square.png")
     tmpTex.setWrapU(Texture.WM_repeat)
