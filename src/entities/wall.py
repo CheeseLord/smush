@@ -77,6 +77,12 @@ class Wall(object):
         # texture.
         self.texture.setWrapU(Texture.WM_repeat)
         self.texture.setWrapV(Texture.WM_repeat)
+        # Note: according to:
+        #     https://www.panda3d.org/manual/index.php/
+        #         Simple_Texture_Replacement
+        # the second parameter "override", though I couldn't find this in the
+        # API reference. Set it to 1 just in case the model already has a
+        # texture, though it's not supposed to.
         self.model.setTexture(self.texture, 1)
 
         # Scale the texture's UV coordinates by the same amount we scale the
