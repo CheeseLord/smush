@@ -7,8 +7,10 @@ from panda3d.core import CollisionPlane
 from panda3d.core import CollisionSphere
 from panda3d.core import Filename
 from panda3d.core import Plane
-from panda3d.core import PointLight
 from panda3d.core import Point3
+from panda3d.core import PointLight
+from panda3d.core import Texture
+from panda3d.core import TextureStage
 from panda3d.core import VBase4
 from panda3d.core import Vec3
 from panda3d.physics import ActorNode
@@ -94,6 +96,21 @@ def initWorld(app_):
     # East wall
     for y in range(MIN_Y, MAX_Y + 1, 2):
         Wall(app, (MAX_X + 1, y, 1), (0, 90, -90))
+
+    # FIXME: This is a hack.
+    # Proof-of-concept for creating a single model for a wall or floor and just
+    # tiling the texture.
+    tmpNP = app.render.attachNewNode("Tmp")
+    tmpModel = loadModel("red-square.egg")
+    tmpModel.reparentTo(tmpNP)
+    tmpTex = app.loader.loadTexture("assets/models/tex/green-square.png")
+    tmpTex.setWrapU(Texture.WM_repeat)
+    tmpTex.setWrapV(Texture.WM_repeat)
+    tmpModel.setTexture(tmpTex, 1)
+    tmpNP.setPos(3, 12, 5)
+    tmpNP.setHpr(0, 90, 0)
+    tmpNP.setScale(3.7, 2.2, 1)
+    tmpNP.setTexScale(TextureStage.getDefault(), 3.7, 2.2)
 
     # Add collision geometry for the ground. For now, it's just an infinite
     # plane; eventually we should figure out how to actually match it with
