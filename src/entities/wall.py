@@ -72,23 +72,25 @@ class Wall(object):
         self.model = loadModel(app, "unit-tile-notex.egg")
         self.model.reparentTo(self.rootNP)
 
+        self.texStage = getTextureStage("WallTextureStage")
+
         self.texture = loadTexture(app, "green-square.png")
         # When the model is larger than the texture, cover it by tiling the
         # texture.
         self.texture.setWrapU(Texture.WM_repeat)
         self.texture.setWrapV(Texture.WM_repeat)
-        # Note: according to:
+        # Note: extrapolating from:
         #     https://www.panda3d.org/manual/index.php/
         #         Simple_Texture_Replacement
-        # the second parameter "override", though I couldn't find this in the
-        # API reference. Set it to 1 just in case the model already has a
+        # I believe the last parameter is "override". (I couldn't find this in
+        # the API reference.) Set it to 1 just in case the model already has a
         # texture, though it's not supposed to.
-        self.model.setTexture(self.texture, 1)
+        self.model.setTexture(self.texStage, self.texture, 1)
 
         # Scale the texture's UV coordinates by the same amount we scale the
         # model, so that the texture will be used for a 1x1 region.
         self.model.setScale(width, height, 1)
-        self.model.setTexScale(TextureStage.getDefault(), width, height)
+        self.model.setTexScale(self.texStage, width, height)
 
         self.collisionNP = self.rootNP.attachNewNode(
             CollisionNode("WallCollider")
@@ -127,6 +129,70 @@ class Wall(object):
         )
         self.collisionNP.node().addSolid(self.collisionGeom)
 
+
+# FIXME: This is a hack to work around what might be a bug with the default
+# shaders? I'm not really sure what's going on.
+#
+# If we create 4 walls with different texture scales but with the textures
+# coming from the same file and all using a single TextureStage, then
+# empirically the walls glitch between the different texture scalings.
+#
+# As far as I can tell, the above is supposed to work (i.e., there shouldn't be
+# glitching). For example:
+#     "Each TextureStage can hold one texture image for a particular model. If
+#     you assign a texture to a particular TextureStage, and then later (or at
+#     a lower node) assign a different texture to the same TextureStage, the
+#     new texture completely replaces the old one. (Within the overall scene, a
+#     given TextureStage can be used to hold any number of different textures
+#     for different nodes; but it only holds one texture for any one particular
+#     node.)"
+# from:
+#     https://www.panda3d.org/manual/index.php/Multitexture_Introduction
+# Meaning we should be fine to use a single TextureStage for all of them (say,
+# the default TextureStage).
+#
+# Also, I'm not sure whether loading a single file twice as a texture gives you
+# a single texture or two distinct-but-identical textures, but even if they're
+# the same, it should be fine to set the TexScale differently, since it doesn't
+# actually modify the texture:
+#     "Note that the operation in each case is applied to the (u, v) texture
+#     coordinates, not to the texture; so it will have the opposite effect on
+#     the texture."
+# from:
+#     https://www.panda3d.org/manual/index.php/Texture_Transforms
+#
+# Some workarounds that empirically fix the problem:
+#   - Using a different TextureStage for each wall, and giving all the
+#     TextureStages different names.
+#       - But using different TextureStages with the same name does not fix the
+#         problem!
+#   - Loading the textures for different walls from different files (even if
+#     they're identical images).
+#   - Removing the following line from initWorld:
+#         app.render.setShaderAuto()
+#
+# This function is a helper for implementing the first of the above
+# workarounds.
+#
+# Note that the third workaround suggests that maybe the problem is in the
+# default shaders, so a better(?) possibility might be to write our own
+# shaders.
+numTextureStages = 0
+def getTextureStage(baseName=None):
+    global numTextureStages
+    if baseName is None:
+        prefix = ""
+    else:
+        prefix = baseName + "-"
+    # Note: you can always recover the numTextureStages from the name of a
+    # TextureStage as follows:
+    #     If the name contains "-", take everything after the last "-".
+    #     Otherwise, take the whole name.
+    # Therefore, no matter what inputs we get for the baseName, every
+    # TextureStage returned by this function will have a unique name.
+    texStage = TextureStage(prefix + str(numTextureStages))
+    numTextureStages += 1
+    return texStage
 
 # FIXME: Factor these out.
 # FIXME: Refactor w/ each other as well.
