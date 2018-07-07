@@ -24,10 +24,10 @@ from src.physics import COLLIDE_MASK_INTO_PLAYER  # TODO[#2]
 from src.physics import COLLIDE_MASK_INTO_WALL    # TODO[#2]
 from src.world_config import PLAYER_HEIGHT
 
-MIN_X =  -7
-MAX_X =   7
-MIN_Y = -13
-MAX_Y =  13
+MIN_X =  -8
+MAX_X =   8
+MIN_Y = -14
+MAX_Y =  14
 
 log = newLogger(__name__)
 
@@ -62,29 +62,25 @@ def initWorld(app_):
     pointLightNP.setPos(0,0,30)
     app.render.setLight(pointLightNP)
 
+    # Define the floor and walls.
+    # TODO: Keep track of these objects?
 
-    # TODO: Keep track of the floor and walls.
-
-    # TODO: Get rid of all the +1 and -1.
-    Floor(app, Point3(MIN_X - 1, MIN_Y - 1, 0), (0, 0, 0),
-          (MAX_X - MIN_X + 2), (MAX_Y - MIN_Y + 2))
+    Floor(app, Point3(MIN_X, MIN_Y, 0), (0, 0, 0),
+          (MAX_X - MIN_X), (MAX_Y - MIN_Y))
 
     # North wall
-    Wall(app, Point3(MIN_X - 1, MAX_Y + 1, 0), (0, 90, 0),
-         (MAX_X - MIN_X + 2), 2)
+    Wall(app, Point3(MIN_X, MAX_Y, 0), (0, 90,   0), (MAX_X - MIN_X), 2)
     # South wall
-    Wall(app, Point3(MAX_X + 1, MIN_Y - 1, 0), (0, 90, 180),
-         (MAX_X - MIN_X + 2), 2)
+    Wall(app, Point3(MAX_X, MIN_Y, 0), (0, 90, 180), (MAX_X - MIN_X), 2)
     # West wall
-    Wall(app, Point3(MIN_X - 1, MIN_Y - 1, 0), (0, 90, 90),
-         (MAX_Y - MIN_Y + 2), 2)
+    Wall(app, Point3(MIN_X, MIN_Y, 0), (0, 90,  90), (MAX_Y - MIN_Y), 2)
     # East wall
-    Wall(app, Point3(MAX_X + 1, MAX_Y + 1, 0), (0, 90, -90),
-         (MAX_Y - MIN_Y + 2), 2)
+    Wall(app, Point3(MAX_X, MAX_Y, 0), (0, 90, -90), (MAX_Y - MIN_Y), 2)
 
     # Add collision geometry for the ground. For now, it's just an infinite
     # plane; eventually we should figure out how to actually match it with
-    # the environment model.
+    # the environment model. Put it at z=-1 so that we can tell if something
+    # clips through the actual floor, which is at z=0.
     groundCollider = app.render.attachNewNode(
         CollisionNode("groundCollider")
     )
@@ -93,7 +89,7 @@ def initWorld(app_):
     )
     # The collision solid must be added to the node, not the NodePath.
     groundCollider.node().addSolid(
-        CollisionPlane(Plane(Vec3(0, 0, 1), Point3(0, 0, 0)))
+        CollisionPlane(Plane(Vec3(0, 0, 1), Point3(0, 0, -1)))
     )
 
     # A floating spherical object which can be toggled between a smiley and
