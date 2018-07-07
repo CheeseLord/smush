@@ -45,7 +45,7 @@ class Panel(object):
     # TODO: "width" and "height" aren't the best names here. They're really the
     # dimensions in the x and y directions, but "height" sounds like the z
     # direction.
-    def __init__(self, app, pos, hpr, width, height, textureName):
+    def __init__(self, app, pos, hpr, width, height, textureName, parent=None):
         """
         Create a (width x height) wall, with its bottom-left corner at pos,
         rotated according to hpr. The wall's texture will be tiled
@@ -56,7 +56,8 @@ class Panel(object):
 
         # TODO: Should we just pass these to avoid passing the app around?
         # cTrav = app.cTrav
-        render = app.render
+        if parent is None:
+            parent = app.render
 
         # TODO: Factor this out.
 
@@ -65,7 +66,7 @@ class Panel(object):
         #       - self.collisionNP
         #           - self.collisionGeom
 
-        self.rootNP = render.attachNewNode("Wall")
+        self.rootNP = parent.attachNewNode("Wall")
         self.rootNP.setPos(pos)
         self.rootNP.setHpr(hpr)
 
@@ -130,14 +131,14 @@ class Panel(object):
         self.collisionNP.node().addSolid(self.collisionGeom)
 
 class Wall(Panel):
-    def __init__(self, app, pos, hpr, width, height):
+    def __init__(self, app, pos, hpr, width, height, **kwargs):
         super(Wall, self).__init__(app, pos, hpr, width, height,
-                                   "green-square.png")
+                                   "green-square.png", **kwargs)
 
 class Floor(Panel):
-    def __init__(self, app, pos, hpr, width, height):
+    def __init__(self, app, pos, hpr, width, height, **kwargs):
         super(Floor, self).__init__(app, pos, hpr, width, height,
-                                    "red-square.png")
+                                    "red-square.png", **kwargs)
 
 
 # FIXME: This is a hack to work around what might be a bug with the default
