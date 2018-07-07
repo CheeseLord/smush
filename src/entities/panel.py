@@ -41,18 +41,18 @@ from src.physics import COLLIDE_MASK_INTO_WALL
 
 
 # TODO: Factor out the stuff that could belong to general entities.
-# TODO: Also factor out a common Floor/Wall superclass? Maybe define Floor and
-# Wall in a single module.
-class Wall(object):
+class Panel(object):
     # TODO: "width" and "height" aren't the best names here. They're really the
     # dimensions in the x and y directions, but "height" sounds like the z
     # direction.
-    def __init__(self, app, pos, hpr, width, height):
+    def __init__(self, app, pos, hpr, width, height, textureName):
         """
         Create a (width x height) wall, with its bottom-left corner at pos,
         rotated according to hpr. The wall's texture will be tiled
         appropriately.
         """
+
+        super(Panel, self).__init__()
 
         # TODO: Should we just pass these to avoid passing the app around?
         # cTrav = app.cTrav
@@ -74,7 +74,7 @@ class Wall(object):
 
         self.texStage = getTextureStage("WallTextureStage")
 
-        self.texture = loadTexture(app, "green-square.png")
+        self.texture = loadTexture(app, textureName)
         # When the model is larger than the texture, cover it by tiling the
         # texture.
         self.texture.setWrapU(Texture.WM_repeat)
@@ -128,6 +128,16 @@ class Wall(object):
             Point3(0,     height, 0),
         )
         self.collisionNP.node().addSolid(self.collisionGeom)
+
+class Wall(Panel):
+    def __init__(self, app, pos, hpr, width, height):
+        super(Wall, self).__init__(app, pos, hpr, width, height,
+                                   "green-square.png")
+
+class Floor(Panel):
+    def __init__(self, app, pos, hpr, width, height):
+        super(Floor, self).__init__(app, pos, hpr, width, height,
+                                    "red-square.png")
 
 
 # FIXME: This is a hack to work around what might be a bug with the default

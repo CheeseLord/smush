@@ -16,7 +16,8 @@ from panda3d.physics import ActorNode
 from src import graphics # TODO[#2]
 from src import physics  # TODO[#2]
 
-from src.entities.wall import Wall
+from src.entities.panel import Floor
+from src.entities.panel import Wall
 from src.logconfig import newLogger
 from src.physics import COLLIDE_MASK_INTO_FLOOR   # TODO[#2]
 from src.physics import COLLIDE_MASK_INTO_PLAYER  # TODO[#2]
@@ -62,22 +63,11 @@ def initWorld(app_):
     app.render.setLight(pointLightNP)
 
 
-    # TODO: Magic numbers bad (position and scale)
-    # scene = loadExampleModel("environment")
-    # scene.reparentTo(app.render)
-    # scene.setScale(0.25, 0.25, 0.25)
-    # scene.setPos(-8, 42, 0)
+    # TODO: Keep track of the floor and walls.
 
-    # TODO: Magic numbers bad (hardcoded based on the squares being 2x2).
-
-    # Floor
-    for x in range(MIN_X, MAX_X + 1, 2):
-        for y in range(MIN_Y, MAX_Y + 1, 2):
-            floorTile = loadModel("red-square.egg")
-            floorTile.reparentTo(app.render)
-            floorTile.setPos(x, y, 0)
-
-    # TODO: Keep track of the walls.
+    # TODO: Get rid of all the +1 and -1.
+    Floor(app, Point3(MIN_X - 1, MIN_Y - 1, 0), (0, 0, 0),
+          (MAX_X - MIN_X + 2), (MAX_Y - MIN_Y + 2))
 
     # North wall
     Wall(app, Point3(MIN_X - 1, MAX_Y + 1, 0), (0, 90, 0),
