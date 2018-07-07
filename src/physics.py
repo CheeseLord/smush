@@ -58,6 +58,9 @@ def initCollisionHandling():
     # overwriting an existing one.
     app.cTrav = CollisionTraverser()
 
+    # Handle fast objects
+    app.cTrav.setRespectPrevTransform(True)
+
     # TODO[#2]: Have physics.py expose a function to add colliders
     # Used to handle collisions between physics-affected objects.
     physicsCollisionHandler = PhysicsCollisionHandler()
