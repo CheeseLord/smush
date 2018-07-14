@@ -129,7 +129,9 @@ def initWorld(app_):
     # Second param is step_height.
     player = BulletCharacterControllerNode(playerShape, 0.2, "Player")
     player.setMaxSlope(45.0)
-    player.setGravity(9.81) # FIXME[bullet]: can we remove this?
+    # The example did this, but I don't think it has any effect? Seems like the
+    # player defaults to the world gravity if it's not otherwise specified.
+    # player.setGravity(9.81)
 
     # # playerNP is at the player's feet, not their center of mass.
     # graphics.playerNP = app.render.attachNewNode(ActorNode("Player"))
