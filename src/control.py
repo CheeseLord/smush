@@ -1,4 +1,4 @@
-# import math
+import math
 import sys
 
 from direct.showbase.InputStateGlobal import inputState
@@ -29,7 +29,7 @@ from src.logconfig import newLogger
 # from src.physics import getPlayerVel
 # from src.physics import setPlayerVel
 # from src.utils import moveVectorTowardByAtMost
-# from src.world_config import GRAVITY_ACCEL
+from src.world_config import GRAVITY_ACCEL
 
 # FIXME[bullet]
 from src import physics
@@ -134,6 +134,13 @@ def movePlayerTask(task):  # pylint: disable=unused-argument
 
     graphics.playerNP.node().setLinearMovement (playerVel, True)
     graphics.playerNP.node().setAngularMovement(rotateSpeed)
+
+    if inputState.isSet("jump"):
+        jumpHeight = 1.1
+        jumpSpeed = math.sqrt(2 * GRAVITY_ACCEL * jumpHeight)
+        # graphics.playerNP.node().setMaxJumpHeight(jumpHeight)
+        graphics.playerNP.node().setJumpSpeed(jumpSpeed)
+        graphics.playerNP.node().doJump()
 
     # # See:
     # #     https://www.panda3d.org/manual/index.php/Keyboard_Support
