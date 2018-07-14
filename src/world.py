@@ -79,6 +79,7 @@ def initWorld(app_):
 
     # Greg 2018-07-07 -- Temporarily add a half-cube of walls and floor to
     # demonstrate that the physics are weird at corners.
+    # FIXME[bullet]: This doesn't seem to work anymore.
     halfCubeNP = app.render.attachNewNode("HalfCubeNP")
     Floor(app, Point3(0, 0, 0), (0,  0,  0), 1, 1, parent=halfCubeNP)
     Wall(app, Point3(0, 0, 0), (0, 90,  90), 1, 1, parent=halfCubeNP)

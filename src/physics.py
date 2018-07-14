@@ -1,6 +1,9 @@
+from panda3d.bullet import BulletWorld
 from panda3d.core import BitMask32
+from panda3d.core import ClockObject
 from panda3d.core import CollisionHandlerEvent
 from panda3d.core import CollisionTraverser
+from panda3d.core import Vec3
 from panda3d.physics import ForceNode
 from panda3d.physics import LinearVectorForce
 from panda3d.physics import PhysicsCollisionHandler
@@ -26,6 +29,8 @@ COLLIDE_MASK_INTO_ENTITY = BitMask32(0x8) # For misc entities flying around
 # it.
 app = None
 
+world = None
+
 physicsCollisionHandler = None
 eventCollisionHandler   = None
 
@@ -34,15 +39,29 @@ def initPhysics(app_):
     app = app_
 
     # Starting the particle engine starts the physics.
+    # FIXME[bullet]: Remove this.
     app.enableParticles()
 
     # Make gravity a thing.
+    # FIXME[bullet]: Remove this.
     gravityNode = ForceNode("world-forces")
     gravityForce = LinearVectorForce(0, 0, -GRAVITY_ACCEL)
     gravityNode.addForce(gravityForce)
     app.physicsMgr.addLinearForce(gravityForce)
 
+    global world
+    world = BulletWorld()
+    world.setGravity(Vec3(0, 0, -GRAVITY_ACCEL))
+
+    app.taskMgr.add(doPhysicsOneFrame, "doPhysics")
+
     initCollisionHandling()
+
+def doPhysicsOneFrame(task):
+    # dt = globalClock.getDt()
+    dt = ClockObject.getGlobalClock().getDt()
+    world.doPhysics(dt)
+    return task.cont
 
 def initCollisionHandling():
     """

@@ -1,17 +1,25 @@
 import os
 import sys
 
-from panda3d.core import CollisionNode
-from panda3d.core import CollisionPolygon
+from panda3d.bullet import BulletRigidBodyNode
+from panda3d.bullet import BulletTriangleMesh
+from panda3d.bullet import BulletTriangleMeshShape
+# from panda3d.core import CollisionNode
+# from panda3d.core import CollisionPolygon
 from panda3d.core import Filename
 from panda3d.core import Point3
 from panda3d.core import Texture
 from panda3d.core import TextureStage
 
-from src.physics import COLLIDE_MASK_INTO_WALL
+# from src.physics import COLLIDE_MASK_INTO_WALL
+
+# FIXME[bullet]
+from src import physics
 
 
 # TODO: Factor out the information in this comment into a general Entity class.
+#
+# FIXME[bullet]: This structure may be wrong now that we're using bullet.
 #
 # Typical structure of entity with model and collision geometry:
 #
@@ -61,17 +69,38 @@ class Panel(object):
 
         # TODO: Factor this out.
 
+        # FIXME[bullet]
         #   - self.rootNP
         #       - self.model
         #       - self.collisionNP
         #           - self.collisionGeom
 
-        self.rootNP = parent.attachNewNode("Wall")
+        # shape = BulletBoxShape(Vec3(width/2, height/2, 0.1))
+
+        bl = Point3(0,     0,      0)
+        br = Point3(width, 0,      0)
+        tr = Point3(width, height, 0)
+        tl = Point3(0,     height, 0)
+        mesh = BulletTriangleMesh()
+        mesh.addTriangle(bl, tl, br)
+        mesh.addTriangle(tl, br, tr)
+        shape = BulletTriangleMeshShape(mesh, dynamic=False)
+
+        node = BulletRigidBodyNode("Panel")
+        node.addShape(shape)
+
+        self.rootNP = parent.attachNewNode(node)
         self.rootNP.setPos(pos)
         self.rootNP.setHpr(hpr)
+        # Move to the center point since that's where the Bullet node wants to
+        # be.
+        # self.rootNP.setPos(self.rootNP, width/2, height/2, 0)
+
+        physics.world.attachRigidBody(node)
 
         self.model = loadModel(app, "unit-tile-notex.egg")
         self.model.reparentTo(self.rootNP)
+        # self.model.setPos((-width/2, -height/2, 0))
 
         self.texStage = getTextureStage("WallTextureStage")
 
@@ -93,10 +122,10 @@ class Panel(object):
         self.model.setScale(width, height, 1)
         self.model.setTexScale(self.texStage, width, height)
 
-        self.collisionNP = self.rootNP.attachNewNode(
-            CollisionNode("WallCollider")
-        )
-        self.collisionNP.node().setIntoCollideMask(COLLIDE_MASK_INTO_WALL)
+        # self.collisionNP = self.rootNP.attachNewNode(
+        #     CollisionNode("WallCollider")
+        # )
+        # self.collisionNP.node().setIntoCollideMask(COLLIDE_MASK_INTO_WALL)
 
         # For debugging purposes, uncomment the following line to show the
         # collision geometry.
@@ -122,13 +151,13 @@ class Panel(object):
         #         Bullet_Continuous_Collision_Detection
 
         # The points for a CollisionPolygon go in counter-clockwise order.
-        self.collisionGeom = CollisionPolygon(
-            Point3(0,     0,      0),
-            Point3(width, 0,      0),
-            Point3(width, height, 0),
-            Point3(0,     height, 0),
-        )
-        self.collisionNP.node().addSolid(self.collisionGeom)
+        # self.collisionGeom = CollisionPolygon(
+        #     Point3(0,     0,      0),
+        #     Point3(width, 0,      0),
+        #     Point3(width, height, 0),
+        #     Point3(0,     height, 0),
+        # )
+        # self.collisionNP.node().addSolid(self.collisionGeom)
 
 class Wall(Panel):
     def __init__(self, app, pos, hpr, width, height, **kwargs):
