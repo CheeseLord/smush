@@ -2,13 +2,15 @@ import os
 import sys
 
 from panda3d.bullet import BulletCharacterControllerNode
+from panda3d.bullet import BulletPlaneShape
+from panda3d.bullet import BulletRigidBodyNode
 from panda3d.bullet import BulletSphereShape
 from panda3d.core import AmbientLight
-from panda3d.core import CollisionNode
-from panda3d.core import CollisionPlane
-from panda3d.core import CollisionSphere
+# from panda3d.core import CollisionNode
+# from panda3d.core import CollisionPlane
+# from panda3d.core import CollisionSphere
 from panda3d.core import Filename
-from panda3d.core import Plane
+# from panda3d.core import Plane
 from panda3d.core import Point3
 from panda3d.core import PointLight
 from panda3d.core import VBase4
@@ -21,9 +23,9 @@ from src import physics  # TODO[#2]
 from src.entities.panel import Floor
 from src.entities.panel import Wall
 from src.logconfig import newLogger
-from src.physics import COLLIDE_MASK_INTO_FLOOR   # TODO[#2]
+# from src.physics import COLLIDE_MASK_INTO_FLOOR   # TODO[#2]
 # from src.physics import COLLIDE_MASK_INTO_PLAYER  # TODO[#2]
-from src.physics import COLLIDE_MASK_INTO_WALL    # TODO[#2]
+# from src.physics import COLLIDE_MASK_INTO_WALL    # TODO[#2]
 from src.world_config import PLAYER_HEIGHT
 
 MIN_X =  -8
@@ -79,6 +81,8 @@ def initWorld(app_):
     # East wall
     Wall(app, Point3(MAX_X, MAX_Y, 0), (0, 90, -90), (MAX_Y - MIN_Y), 2)
 
+    # TODO[bullet]: Factor out all the logic below that creates objects.
+
     # Greg 2018-07-07 -- Temporarily add a half-cube of walls and floor to
     # demonstrate that the physics are weird at corners.
     # FIXME[bullet]: This doesn't seem to work anymore.
@@ -89,41 +93,56 @@ def initWorld(app_):
     # halfCubeNP.setPos(3, 20, 0)
     # halfCubeNP.setHpr(180, 5, -5)
 
-    # Add collision geometry for the ground. For now, it's just an infinite
-    # plane; eventually we should figure out how to actually match it with
-    # the environment model. Put it at z=-1 so that we can tell if something
-    # clips through the actual floor, which is at z=0.
-    groundCollider = app.render.attachNewNode(
-        CollisionNode("groundCollider")
-    )
-    groundCollider.node().setIntoCollideMask(
-        COLLIDE_MASK_INTO_FLOOR
-    )
-    # The collision solid must be added to the node, not the NodePath.
-    groundCollider.node().addSolid(
-        CollisionPlane(Plane(Vec3(0, 0, 1), Point3(0, 0, -1)))
-    )
+    # # Add collision geometry for the ground. For now, it's just an infinite
+    # # plane; eventually we should figure out how to actually match it with
+    # # the environment model. Put it at z=-1 so that we can tell if something
+    # # clips through the actual floor, which is at z=0.
+    # groundCollider = app.render.attachNewNode(
+    #     CollisionNode("groundCollider")
+    # )
+    # groundCollider.node().setIntoCollideMask(
+    #     COLLIDE_MASK_INTO_FLOOR
+    # )
+    # # The collision solid must be added to the node, not the NodePath.
+    # groundCollider.node().addSolid(
+    #     CollisionPlane(Plane(Vec3(0, 0, 1), Point3(0, 0, -1)))
+    # )
+
+    # Add an invisible collision plane below the floor (z=-1) so that if the
+    # player glitches past the floor somehow, they at least don't fall forever
+    # into the bottomless abyss.
+    groundShape = BulletPlaneShape(Vec3(0, 0, 1), 0)
+    groundNode = BulletRigidBodyNode("Ground")
+    groundNode.addShape(groundShape)
+    groundNP = app.render.attachNewNode(groundNode)
+    groundNP.setPos(0, 0, -1)
+    physics.world.attachRigidBody(groundNode)
 
     # A floating spherical object which can be toggled between a smiley and
     # a frowney. Called the smiley for historical reasons.
-    graphics.smileyNP = app.render.attachNewNode("SmileyNP")
+    smileyShape = BulletSphereShape(1.0)
+    smileyNode = BulletRigidBodyNode("Smiley")
+    smileyNode.addShape(smileyShape)
+
+    graphics.smileyNP = app.render.attachNewNode(smileyNode)
     # Lift the smiley/frowney up a bit so that if the player runs into it,
     # it'll try to push them down. This used to demonstrate a bug where the
     # ground didn't push back and so the player would just be pushed
     # underground. At this point it's just for historical reasons.
     graphics.smileyNP.setPos(-5, 10, 1.25)
+    physics.world.attachRigidBody(smileyNode)
 
     graphics.smileyModel = loadExampleModel("smiley")
     graphics.smileyModel.reparentTo(graphics.smileyNP)
     graphics.frowneyModel = loadExampleModel("frowney")
 
-    smileyCollide = graphics.smileyNP.attachNewNode(
-        CollisionNode("SmileyCollide")
-    )
-    # The smiley is logically a wall, so set its into collision mask as
-    # such.
-    smileyCollide.node().setIntoCollideMask(COLLIDE_MASK_INTO_WALL)
-    smileyCollide.node().addSolid(CollisionSphere(0, 0, 0, 1))
+    # smileyCollide = graphics.smileyNP.attachNewNode(
+    #     CollisionNode("SmileyCollide")
+    # )
+    # # The smiley is logically a wall, so set its into collision mask as
+    # # such.
+    # smileyCollide.node().setIntoCollideMask(COLLIDE_MASK_INTO_WALL)
+    # smileyCollide.node().addSolid(CollisionSphere(0, 0, 0, 1))
 
     playerShape = BulletSphereShape(0.5 * PLAYER_HEIGHT)
     # Second param is step_height.

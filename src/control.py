@@ -104,6 +104,7 @@ def movePlayerTask(task):  # pylint: disable=unused-argument
     # backwardSpeed = 10
 
     # In meters per second.
+    # FIXME: The player does not move at 15 m/s. What units does this use??
     # TODO: This is too high... if we rescale the environment more sanely
     # can it feel natural with a not-absurd top speed?
     maxSpeed = 15
@@ -290,6 +291,7 @@ def clicked():
     physicsNP.setH(playerHeading)
     # Try to prevent "recoil"...
     # FIXME[bullet]: 0.5 is the player's radius.
+    # FIXME[bullet]: Wait, no it's not. Isn't the player's radius 1.0?
     # ...which isn't right anyway. If you angle down far enough, the bullet is
     # still created inside the player, so immediately collides and the player
     # gets bumped back. If you set the Y high enough you can avoid this
