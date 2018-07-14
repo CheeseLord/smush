@@ -1,36 +1,39 @@
-import math
+# import math
 import sys
 
+from direct.showbase.InputStateGlobal import inputState
 from direct.task import Task
 
 from panda3d.bullet import BulletSphereShape
 from panda3d.bullet import BulletRigidBodyNode
-from panda3d.core import ClockObject
+# from panda3d.core import ClockObject
 # from panda3d.core import CollisionNode
 # from panda3d.core import CollisionSphere
+from panda3d.core import Point3
 from panda3d.core import Vec3
 from panda3d.core import WindowProperties
 # from panda3d.physics import ActorNode
 
 from src.graphics import changePlayerHeadingPitch
 from src.graphics import getPlayerHeadingPitch
-from src.graphics import getPlayerHeadPos
-from src.graphics import getPlayerPos
+# from src.graphics import getPlayerHeadPos
+# from src.graphics import getPlayerPos
 from src.graphics import getRelativePlayerHeadVector
-from src.graphics import getRelativePlayerVector
+# from src.graphics import getRelativePlayerVector
 from src.logconfig import newLogger
 # from src.physics import COLLIDE_MASK_INTO_ENTITY
 # from src.physics import COLLIDE_MASK_INTO_FLOOR
 # from src.physics import COLLIDE_MASK_INTO_NONE
 # from src.physics import COLLIDE_MASK_INTO_WALL
 # from src.physics import addBulletColliders
-from src.physics import getPlayerVel
-from src.physics import setPlayerVel
-from src.utils import moveVectorTowardByAtMost
-from src.world_config import GRAVITY_ACCEL
+# from src.physics import getPlayerVel
+# from src.physics import setPlayerVel
+# from src.utils import moveVectorTowardByAtMost
+# from src.world_config import GRAVITY_ACCEL
 
 # FIXME[bullet]
 from src import physics
+from src import graphics
 
 log = newLogger(__name__)
 
@@ -71,6 +74,15 @@ def initKeyboardAndMouse():
     # app.win.set_close_request_event("window-close")
     # app.accept("window-close", handleWindowClose)
 
+    # Setup watchers for the control keys
+    inputState.watchWithModifiers("moveFwd",   "w")
+    inputState.watchWithModifiers("moveBack",  "s")
+    inputState.watchWithModifiers("moveLeft",  "a")
+    inputState.watchWithModifiers("moveRight", "d")
+    inputState.watchWithModifiers("turnLeft",  "q")
+    inputState.watchWithModifiers("turnRight", "e")
+    inputState.watchWithModifiers("jump",      "space")
+
     app.taskMgr.add(controlCameraTask, "ControlCameraTask")
     app.taskMgr.add(movePlayerTask,    "MovePlayerTask")
 
@@ -79,7 +91,7 @@ def initKeyboardAndMouse():
 # TODO: Rename this. This is the function that moves the player based on the
 # keyboard.
 def movePlayerTask(task):  # pylint: disable=unused-argument
-    dt = ClockObject.getGlobalClock().getDt()
+    # dt = ClockObject.getGlobalClock().getDt()
 
     # TODO: Blah blah magic numbers bad. But actually though, can we put
     # all these in a config file?
@@ -96,61 +108,89 @@ def movePlayerTask(task):  # pylint: disable=unused-argument
     # can it feel natural with a not-absurd top speed?
     maxSpeed = 15
 
-    timeToReachTopSpeed = 0.3
-    maxAccel = maxSpeed / timeToReachTopSpeed
+    # timeToReachTopSpeed = 0.3
+    # maxAccel = maxSpeed / timeToReachTopSpeed
 
     # Degrees per second.
-    rotateSpeed   = 90
+    maxRotateSpeed = 90
 
-    # See:
-    #     https://www.panda3d.org/manual/index.php/Keyboard_Support
-    # section "Polling interface"
-    moveFwd   = app.mouseWatcherNode.is_button_down("w")
-    moveLeft  = app.mouseWatcherNode.is_button_down("a")
-    moveRight = app.mouseWatcherNode.is_button_down("d")
-    moveBack  = app.mouseWatcherNode.is_button_down("s")
-    turnLeft  = app.mouseWatcherNode.is_button_down("q")
-    turnRight = app.mouseWatcherNode.is_button_down("e")
-    jump      = app.mouseWatcherNode.is_button_down("space")
+    playerVel   = Vec3(0, 0, 0)
+    rotateSpeed = 0
 
-    # TODO: Handle rotations by setting angular velocity instead of
-    # instantaneously changing HPR.
+    if inputState.isSet("moveFwd"):
+        playerVel.setY( maxSpeed)
+    if inputState.isSet("moveBack"):
+        playerVel.setY(-maxSpeed)
+    if inputState.isSet("moveLeft"):
+        playerVel.setX(-maxSpeed)
+    if inputState.isSet("moveRight"):
+        playerVel.setX( maxSpeed)
+
     # x is sideways and y is forward. A positive rotation is to the left.
-    rotateAmt = (turnLeft - turnRight) * rotateSpeed * dt
-    changePlayerHeadingPitch(rotateAmt, 0)
+    if inputState.isSet("turnLeft"):
+        rotateSpeed =  maxRotateSpeed
+    if inputState.isSet("turnRight"):
+        rotateSpeed = -maxRotateSpeed
 
-    # Compute direction of target velocity in x,y-plane.
-    netRunRight = moveRight - moveLeft
-    netRunFwd   = moveFwd   - moveBack
-    # TODO: Does this go before or after we add in the z?
-    targetVel = getRelativePlayerVector(Vec3(netRunRight, netRunFwd, 0))
+    graphics.playerNP.node().setLinearMovement (playerVel, True)
+    graphics.playerNP.node().setAngularMovement(rotateSpeed)
 
-    # Rescale to desired magnitude (if not zero).
-    if netRunFwd != 0 or netRunRight != 0:
-        targetVel *= maxSpeed / targetVel.length()
+    # # See:
+    # #     https://www.panda3d.org/manual/index.php/Keyboard_Support
+    # # section "Polling interface"
+    # # TODO: Look into using direct.showbase.InputStateGlobal.inputState for
+    # # controls instead.
+    # moveFwd   = app.mouseWatcherNode.is_button_down("w")
+    # moveLeft  = app.mouseWatcherNode.is_button_down("a")
+    # moveRight = app.mouseWatcherNode.is_button_down("d")
+    # moveBack  = app.mouseWatcherNode.is_button_down("s")
+    # turnLeft  = app.mouseWatcherNode.is_button_down("q")
+    # turnRight = app.mouseWatcherNode.is_button_down("e")
+    # jump      = app.mouseWatcherNode.is_button_down("space")
 
-    # Copy z from current velocity.
-    currPlayerVel = getPlayerVel()
-    playerZVel = currPlayerVel.getZ()
-    targetVel += Vec3(0, 0, playerZVel)
+    # # TODO: Handle rotations by setting angular velocity instead of
+    # # instantaneously changing HPR.
+    # # x is sideways and y is forward. A positive rotation is to the left.
+    # # rotateAmt = (turnLeft - turnRight) * rotateSpeed * dt
+    # # changePlayerHeadingPitch(rotateAmt, 0)
+    # angularSpeed = (turnLeft - turnRight) * rotateSpeed
+    # graphics.playerNP.node().setAngularMovement(angularSpeed)
 
-    # Move current velocity toward target velocity by at most a*dt
-    newPlayerVel = moveVectorTowardByAtMost(currPlayerVel, targetVel,
-                                            maxAccel * dt)
+    # # Compute direction of target velocity in x,y-plane.
+    # netRunRight = moveRight - moveLeft
+    # netRunFwd   = moveFwd   - moveBack
+    # # TODO: Does this go before or after we add in the z?
+    # targetVel = getRelativePlayerVector(Vec3(netRunRight, netRunFwd, 0))
 
-    # Allow the player to jump, but only if they're standing on the ground.
-    # TODO: Really this should be "but only if there's ground beneath their
-    # feet, regardless of z coordinate", but I don't know how to check for
-    # that.
-    # Also only allow jumping if they're not already going up. I don't know
-    # how this can happen, but it has been observed.
-    _, _, playerZ = getPlayerPos()
-    if jump and -0.001 <= playerZ <= 0.001 and playerZVel <= 0.001:
-        jumpHeight = 1.1
-        jumpSpeed = math.sqrt(2 * GRAVITY_ACCEL * jumpHeight)
-        newPlayerVel += Vec3(0, 0, jumpSpeed)
+    # # Rescale to desired magnitude (if not zero).
+    # if netRunFwd != 0 or netRunRight != 0:
+    #     targetVel *= maxSpeed / targetVel.length()
 
-    setPlayerVel(newPlayerVel)
+    # # Copy z from current velocity.
+    # # currPlayerVel = getPlayerVel()
+    # # playerZVel = currPlayerVel.getZ()
+    # playerZVel = 0 # ??????
+    # targetVel += Vec3(0, 0, playerZVel)
+
+    # # Move current velocity toward target velocity by at most a*dt
+    # # newPlayerVel = moveVectorTowardByAtMost(currPlayerVel, targetVel,
+    # #                                         maxAccel * dt)
+    # newPlayerVel = targetVel
+
+    # # Allow the player to jump, but only if they're standing on the ground.
+    # # TODO: Really this should be "but only if there's ground beneath their
+    # # feet, regardless of z coordinate", but I don't know how to check for
+    # # that.
+    # # Also only allow jumping if they're not already going up. I don't know
+    # # how this can happen, but it has been observed.
+    # _, _, playerZ = getPlayerPos()
+    # if jump and -0.001 <= playerZ <= 0.001 and playerZVel <= 0.001:
+    #     jumpHeight = 1.1
+    #     jumpSpeed = math.sqrt(2 * GRAVITY_ACCEL * jumpHeight)
+    #     newPlayerVel += Vec3(0, 0, jumpSpeed)
+
+    # # setPlayerVel(newPlayerVel)
+    # graphics.playerNP.node().setLinearMovement(newPlayerVel, True)
 
     return Task.cont
 
@@ -224,12 +264,14 @@ def clicked():
     #         Bullet_Continuous_Collision_Detection
     # for an alternate strategy for aiming a bullet where the player is
     # looking. The example code there uses base.camLens.extrude.
-    playerVel = getPlayerVel()
-    bulletVel = getRelativePlayerHeadVector(Vec3(0, 30, 0))
+    # FIXME[bullet]
+    # playerVel = getPlayerVel()
+    playerVel = Vec3(0, 0, 0)
+    bulletVel = playerVel + getRelativePlayerHeadVector(Vec3(0, 30, 0))
 
     # TODO: Also account for the player's angular velocity.
     # physicsNP.node().getPhysicsObject().setVelocity(playerVel + bulletVel)
-    node.setLinearVelocity(playerVel + bulletVel)
+    node.setLinearVelocity(bulletVel)
 
     ball = app.loader.loadModel("smiley")
     ball.reparentTo(physicsNP)
@@ -239,7 +281,16 @@ def clicked():
     # TODO[bullet]: They should be able to roll now, so we should set this.
     playerHeading, _ = getPlayerHeadingPitch()
     physicsNP.setH(playerHeading)
-    physicsNP.setPos(getPlayerHeadPos())
+    # Try to prevent "recoil"...
+    # FIXME[bullet]: 0.5 is the player's radius.
+    # ...which isn't right anyway. If you angle down far enough, the bullet is
+    # still created inside the player, so immediately collides and the player
+    # gets bumped back. If you set the Y high enough you can avoid this
+    # problem, but then you can fire through floors and walls by just standing
+    # too close when you shoot.
+    # physicsNP.setPos(getPlayerHeadPos() + bulletVel.normalize() * 0.5)
+    physicsNP.setPos(app.render.getRelativePoint(graphics.playerHeadNP,
+                                                 Point3(0, 0.5, 0)))
 
     # Also add collision geometry to the bullet
     # bulletColliderPhys = physicsNP.attachNewNode(

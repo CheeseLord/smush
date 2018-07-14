@@ -1,6 +1,8 @@
 import os
 import sys
 
+from panda3d.bullet import BulletCharacterControllerNode
+from panda3d.bullet import BulletSphereShape
 from panda3d.core import AmbientLight
 from panda3d.core import CollisionNode
 from panda3d.core import CollisionPlane
@@ -11,7 +13,7 @@ from panda3d.core import Point3
 from panda3d.core import PointLight
 from panda3d.core import VBase4
 from panda3d.core import Vec3
-from panda3d.physics import ActorNode
+# from panda3d.physics import ActorNode
 
 from src import graphics # TODO[#2]
 from src import physics  # TODO[#2]
@@ -20,7 +22,7 @@ from src.entities.panel import Floor
 from src.entities.panel import Wall
 from src.logconfig import newLogger
 from src.physics import COLLIDE_MASK_INTO_FLOOR   # TODO[#2]
-from src.physics import COLLIDE_MASK_INTO_PLAYER  # TODO[#2]
+# from src.physics import COLLIDE_MASK_INTO_PLAYER  # TODO[#2]
 from src.physics import COLLIDE_MASK_INTO_WALL    # TODO[#2]
 from src.world_config import PLAYER_HEIGHT
 
@@ -123,17 +125,30 @@ def initWorld(app_):
     smileyCollide.node().setIntoCollideMask(COLLIDE_MASK_INTO_WALL)
     smileyCollide.node().addSolid(CollisionSphere(0, 0, 0, 1))
 
+    playerShape = BulletSphereShape(0.5 * PLAYER_HEIGHT)
+    # Second param is step_height.
+    player = BulletCharacterControllerNode(playerShape, 0.2, "Player")
+    player.setMaxSlope(45.0)
+    player.setGravity(9.81) # FIXME[bullet]: can we remove this?
+
+    # # playerNP is at the player's feet, not their center of mass.
+    # graphics.playerNP = app.render.attachNewNode(ActorNode("Player"))
+    # graphics.playerNP.setPos(0, 0, 0)
+    # app.physicsMgr.attachPhysicalNode(graphics.playerNP.node())
+    # graphics.playerHeadNP = graphics.playerNP.attachNewNode("PlayerHead")
+
+    # TODO[#2][bullet]: Why does graphics own playerNP?!
     # TODO[#2]: Functions in graphics.py to set pos and hpr.
     # TODO[#2]: ...what about the physics code in control.py?
-    # playerNP is at the player's feet, not their center of mass.
-    graphics.playerNP = app.render.attachNewNode(ActorNode("Player"))
-    graphics.playerNP.setPos(0, 0, 0)
-    app.physicsMgr.attachPhysicalNode(graphics.playerNP.node())
+    graphics.playerNP = app.render.attachNewNode(player)
+    graphics.playerNP.setPos(0, 0, 1)
+    physics.world.attachCharacter(player)
     graphics.playerHeadNP = graphics.playerNP.attachNewNode("PlayerHead")
+
     # Put the player's head a little below the actual top of the player so
     # that if you're standing right under an object, the object is still
     # within your camera's viewing frustum.
-    graphics.playerHeadNP.setPos(0, 0, PLAYER_HEIGHT - 0.2)
+    graphics.playerHeadNP.setPos(0, 0, 0.3 * PLAYER_HEIGHT)
     app.camera.reparentTo(graphics.playerHeadNP)
     # Move the camera's near plane closer than the default (1) so that when
     # the player butts their head against a wall, they don't see through
@@ -143,20 +158,20 @@ def initWorld(app_):
     #     https://www.panda3d.org/manual/index.php/Lenses_and_Field_of_View
     app.camLens.setNear(0.1)
 
-    # For colliding the player with walls, floor, and other such obstacles.
-    playerCollider = graphics.playerNP.attachNewNode(
-        CollisionNode("playerCollider")
-    )
-    playerCollider.node().setIntoCollideMask(COLLIDE_MASK_INTO_PLAYER)
-    playerCollider.node().setFromCollideMask(COLLIDE_MASK_INTO_FLOOR |
-                                             COLLIDE_MASK_INTO_WALL)
-    playerCollider.node().addSolid(
-        CollisionSphere(0, 0, 0.5 * PLAYER_HEIGHT, 0.5 * PLAYER_HEIGHT)
-    )
+    # # For colliding the player with walls, floor, and other such obstacles.
+    # playerCollider = graphics.playerNP.attachNewNode(
+    #     CollisionNode("playerCollider")
+    # )
+    # playerCollider.node().setIntoCollideMask(COLLIDE_MASK_INTO_PLAYER)
+    # playerCollider.node().setFromCollideMask(COLLIDE_MASK_INTO_FLOOR |
+    #                                          COLLIDE_MASK_INTO_WALL)
+    # playerCollider.node().addSolid(
+    #     CollisionSphere(0, 0, 0.5 * PLAYER_HEIGHT, 0.5 * PLAYER_HEIGHT)
+    # )
 
-    physics.physicsCollisionHandler.addCollider(playerCollider,
-                                                graphics.playerNP)
-    app.cTrav.addCollider(playerCollider, physics.physicsCollisionHandler)
+    # physics.physicsCollisionHandler.addCollider(playerCollider,
+    #                                             graphics.playerNP)
+    # app.cTrav.addCollider(playerCollider, physics.physicsCollisionHandler)
 
 
 def loadModel(modelName):
