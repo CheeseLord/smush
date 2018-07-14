@@ -82,12 +82,12 @@ def initWorld(app_):
     # Greg 2018-07-07 -- Temporarily add a half-cube of walls and floor to
     # demonstrate that the physics are weird at corners.
     # FIXME[bullet]: This doesn't seem to work anymore.
-    halfCubeNP = app.render.attachNewNode("HalfCubeNP")
-    Floor(app, Point3(0, 0, 0), (0,  0,  0), 1, 1, parent=halfCubeNP)
-    Wall(app, Point3(0, 0, 0), (0, 90,  90), 1, 1, parent=halfCubeNP)
-    Wall(app, Point3(1, 0, 0), (0, 90, 180), 1, 1, parent=halfCubeNP)
-    halfCubeNP.setPos(3, 20, 0)
-    halfCubeNP.setHpr(180, 5, -5)
+    # halfCubeNP = app.render.attachNewNode("HalfCubeNP")
+    # Floor(app, Point3(0, 0, 0), (0,  0,  0), 1, 1, parent=halfCubeNP)
+    # Wall(app, Point3(0, 0, 0), (0, 90,  90), 1, 1, parent=halfCubeNP)
+    # Wall(app, Point3(1, 0, 0), (0, 90, 180), 1, 1, parent=halfCubeNP)
+    # halfCubeNP.setPos(3, 20, 0)
+    # halfCubeNP.setHpr(180, 5, -5)
 
     # Add collision geometry for the ground. For now, it's just an infinite
     # plane; eventually we should figure out how to actually match it with
