@@ -4,11 +4,9 @@ from panda3d.core import ClockObject
 from panda3d.core import CollisionHandlerEvent
 from panda3d.core import CollisionTraverser
 from panda3d.core import Vec3
-from panda3d.physics import ForceNode
-from panda3d.physics import LinearVectorForce
 from panda3d.physics import PhysicsCollisionHandler
 
-from src import graphics # TODO[#2]
+from src import graphics # FIXME[#2]
 
 from src.graphics import toggleSmileyFrowney
 from src.logconfig import newLogger
@@ -38,17 +36,6 @@ def initPhysics(app_):
     global app
     app = app_
 
-    # Starting the particle engine starts the physics.
-    # FIXME[bullet]: Remove this.
-    app.enableParticles()
-
-    # Make gravity a thing.
-    # FIXME[bullet]: Remove this.
-    gravityNode = ForceNode("world-forces")
-    gravityForce = LinearVectorForce(0, 0, -GRAVITY_ACCEL)
-    gravityNode.addForce(gravityForce)
-    app.physicsMgr.addLinearForce(gravityForce)
-
     global world
     world = BulletWorld()
     world.setGravity(Vec3(0, 0, -GRAVITY_ACCEL))
@@ -58,10 +45,13 @@ def initPhysics(app_):
     initCollisionHandling()
 
 def doPhysicsOneFrame(task):
+    # TODO: This next line doesn't lint, but maybe it would be more efficient
+    # to cache the globalClock somehow instead of calling getGlobalClock()
+    # every frame? I suppose we could just suppress the pylint warning.
     # dt = globalClock.getDt()
     dt = ClockObject.getGlobalClock().getDt()
     # TODO[#3] This seems excessive but until we fix recoil lets leave this
-    # here for debuggin purposes
+    # here for debugging purposes
     # 90 substeps, at 1/600 frames per second for physics updates.
     world.doPhysics(dt, 90, 1.0/600.0)
     return task.cont

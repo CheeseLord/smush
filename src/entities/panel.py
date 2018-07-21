@@ -4,14 +4,10 @@ import sys
 from panda3d.bullet import BulletRigidBodyNode
 from panda3d.bullet import BulletTriangleMesh
 from panda3d.bullet import BulletTriangleMeshShape
-# from panda3d.core import CollisionNode
-# from panda3d.core import CollisionPolygon
 from panda3d.core import Filename
 from panda3d.core import Point3
 from panda3d.core import Texture
 from panda3d.core import TextureStage
-
-# from src.physics import COLLIDE_MASK_INTO_WALL
 
 # FIXME[bullet]
 from src import physics
@@ -75,8 +71,6 @@ class Panel(object):
         #       - self.collisionNP
         #           - self.collisionGeom
 
-        # shape = BulletBoxShape(Vec3(width/2, height/2, 0.1))
-
         bl = Point3(0,     0,      0)
         br = Point3(width, 0,      0)
         tr = Point3(width, height, 0)
@@ -84,6 +78,7 @@ class Panel(object):
         mesh = BulletTriangleMesh()
         mesh.addTriangle(bl, tl, br)
         mesh.addTriangle(tl, br, tr)
+        # TODO: Comment about merits of TriangleMesh vs. Box.
         shape = BulletTriangleMeshShape(mesh, dynamic=False)
 
         node = BulletRigidBodyNode("Panel")
@@ -92,15 +87,11 @@ class Panel(object):
         self.rootNP = parent.attachNewNode(node)
         self.rootNP.setPos(pos)
         self.rootNP.setHpr(hpr)
-        # Move to the center point since that's where the Bullet node wants to
-        # be.
-        # self.rootNP.setPos(self.rootNP, width/2, height/2, 0)
 
         physics.world.attachRigidBody(node)
 
         self.model = loadModel(app, "unit-tile-notex.egg")
         self.model.reparentTo(self.rootNP)
-        # self.model.setPos((-width/2, -height/2, 0))
 
         self.texStage = getTextureStage("WallTextureStage")
 
@@ -122,42 +113,6 @@ class Panel(object):
         self.model.setScale(width, height, 1)
         self.model.setTexScale(self.texStage, width, height)
 
-        # self.collisionNP = self.rootNP.attachNewNode(
-        #     CollisionNode("WallCollider")
-        # )
-        # self.collisionNP.node().setIntoCollideMask(COLLIDE_MASK_INTO_WALL)
-
-        # For debugging purposes, uncomment the following line to show the
-        # collision geometry.
-        # self.collisionNP.show()
-
-        # Note: I would have expected that a CollisionBox would be more robust
-        # w/r/t glitching through it than a CollisionPolygon, since the latter
-        # is infinitely thin and the former can have some thickness to it.
-        # As an extreme example, I originally tried putting a 2x2x2 cube behind
-        # each wall:
-        #
-        #     self.collisionGeom = CollisionBox(Point3(0, 0, -1), 1, 1, 1)
-        #     self.collisionGeom = CollisionBox(Point3(-1, -1, -2.0),
-        #                                       Point3( 1,  1,    0))
-        #
-        # But empirically, the CollisionBoxes are actually easier to glitch
-        # through than a simple CollisionPolygon, so I use that instead.
-        #
-        # TODO: While the CollisionPolygon is pretty good at preventing the
-        # player from glitching through, it usually doesn't seem to stop
-        # bullets. Possibly we want something like this:
-        #     https://www.panda3d.org/manual/index.php/
-        #         Bullet_Continuous_Collision_Detection
-
-        # The points for a CollisionPolygon go in counter-clockwise order.
-        # self.collisionGeom = CollisionPolygon(
-        #     Point3(0,     0,      0),
-        #     Point3(width, 0,      0),
-        #     Point3(width, height, 0),
-        #     Point3(0,     height, 0),
-        # )
-        # self.collisionNP.node().addSolid(self.collisionGeom)
 
 class Wall(Panel):
     def __init__(self, app, pos, hpr, width, height, **kwargs):
