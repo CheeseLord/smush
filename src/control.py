@@ -160,8 +160,8 @@ def controlCameraTask(task):  # pylint: disable=unused-argument
     mouseX = mouseData.getX()
     mouseY = mouseData.getY()
 
-    centerX = app.win.getXSize() / 2
-    centerY = app.win.getYSize() / 2
+    centerX = app.win.getXSize() // 2
+    centerY = app.win.getYSize() // 2
 
     # If our window doesn't have the focus, then this call will fail. In
     # that case, don't move the camera based on the mouse because we're

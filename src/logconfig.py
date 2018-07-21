@@ -64,7 +64,7 @@ def newLogger(fullname):
         # the odd character will be used for the start of the module name,
         # which I think is probably more useful than the end.
         middle   = SHORTENED_MIDDLE
-        endLen   = (MAX_NAME_LENGTH - len(middle)) / 2
+        endLen   = (MAX_NAME_LENGTH - len(middle)) // 2
         end      = name[-endLen:]
         beginLen = MAX_NAME_LENGTH - endLen - len(middle)
         begin    = name[:beginLen]
