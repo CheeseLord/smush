@@ -78,6 +78,9 @@ def initCollisionHandling():
     physicsCollisionHandler = PhysicsCollisionHandler()
 
     # Used to run custom code on collisions.
+    # TODO[bullet]: This isn't used anymore. Reimplement custom collision
+    # detection so we can toggle between smiley and frowney when that object is
+    # shot.
     eventCollisionHandler = CollisionHandlerEvent()
 
     eventCollisionHandler.addInPattern("%fn-into-%in")
