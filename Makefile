@@ -2,6 +2,10 @@
 
 # To use a Python binary other than the one in your PATH, run
 #     make 'PYTHON=/path/to/alternate/python2.7'
+# TODO: Detect if the user's Python is Anaconda and print a useful warning in
+# that case. Should be able to use something like:
+#     python -c "import sys; print sys.version" | grep Anaconda
+# (See https://stackoverflow.com/a/21282690).
 PYTHON ?= python2.7
 
 VIRTUALENV = ./venv
