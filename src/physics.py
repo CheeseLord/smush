@@ -1,11 +1,10 @@
+from panda3d.bullet import BulletWorld
 from panda3d.core import BitMask32
+from panda3d.core import ClockObject
 from panda3d.core import CollisionHandlerEvent
 from panda3d.core import CollisionTraverser
-from panda3d.physics import ForceNode
-from panda3d.physics import LinearVectorForce
+from panda3d.core import Vec3
 from panda3d.physics import PhysicsCollisionHandler
-
-from src import graphics # TODO[#2]
 
 from src.graphics import toggleSmileyFrowney
 from src.logconfig import newLogger
@@ -26,6 +25,8 @@ COLLIDE_MASK_INTO_ENTITY = BitMask32(0x8) # For misc entities flying around
 # it.
 app = None
 
+world = None
+
 physicsCollisionHandler = None
 eventCollisionHandler   = None
 
@@ -33,16 +34,25 @@ def initPhysics(app_):
     global app
     app = app_
 
-    # Starting the particle engine starts the physics.
-    app.enableParticles()
+    global world
+    world = BulletWorld()
+    world.setGravity(Vec3(0, 0, -GRAVITY_ACCEL))
 
-    # Make gravity a thing.
-    gravityNode = ForceNode("world-forces")
-    gravityForce = LinearVectorForce(0, 0, -GRAVITY_ACCEL)
-    gravityNode.addForce(gravityForce)
-    app.physicsMgr.addLinearForce(gravityForce)
+    app.taskMgr.add(doPhysicsOneFrame, "doPhysics")
 
     initCollisionHandling()
+
+def doPhysicsOneFrame(task):
+    # TODO: This next line doesn't lint, but maybe it would be more efficient
+    # to cache the globalClock somehow instead of calling getGlobalClock()
+    # every frame? I suppose we could just suppress the pylint warning.
+    # dt = globalClock.getDt()
+    dt = ClockObject.getGlobalClock().getDt()
+    # TODO[#3] This seems excessive but until we fix recoil lets leave this
+    # here for debugging purposes
+    # 90 substeps, at 1/600 frames per second for physics updates.
+    world.doPhysics(dt, 90, 1.0/600.0)
+    return task.cont
 
 def initCollisionHandling():
     """
@@ -66,6 +76,9 @@ def initCollisionHandling():
     physicsCollisionHandler = PhysicsCollisionHandler()
 
     # Used to run custom code on collisions.
+    # TODO[bullet]: This isn't used anymore. Reimplement custom collision
+    # detection so we can toggle between smiley and frowney when that object is
+    # shot.
     eventCollisionHandler = CollisionHandlerEvent()
 
     eventCollisionHandler.addInPattern("%fn-into-%in")
@@ -91,14 +104,7 @@ def onCollideEventOut(entry):
     log.debug("Collision detected OUT.")
     log.debug("    %s", entry)
 
-def getPlayerVel():
-    return getPlayerPhysicsObj().getVelocity()
-
-def setPlayerVel(newVel):
-    getPlayerPhysicsObj().setVelocity(newVel)
-
-def getPlayerPhysicsObj():
-    return graphics.playerNP.node().getPhysicsObject()
+# TODO[bullet]: Provide a way to get/set the player velocity?
 
 def addBulletColliders(bulletColliderPhys, bulletColliderEvt, physicsNP):
     # Handle collisions through physics via bulletColliderPhys.
