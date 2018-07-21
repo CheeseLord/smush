@@ -6,8 +6,6 @@ from panda3d.core import CollisionTraverser
 from panda3d.core import Vec3
 from panda3d.physics import PhysicsCollisionHandler
 
-from src import graphics # FIXME[#2]
-
 from src.graphics import toggleSmileyFrowney
 from src.logconfig import newLogger
 from src.world_config import GRAVITY_ACCEL
@@ -106,14 +104,7 @@ def onCollideEventOut(entry):
     log.debug("Collision detected OUT.")
     log.debug("    %s", entry)
 
-def getPlayerVel():
-    return getPlayerPhysicsObj().getVelocity()
-
-def setPlayerVel(newVel):
-    getPlayerPhysicsObj().setVelocity(newVel)
-
-def getPlayerPhysicsObj():
-    return graphics.playerNP.node().getPhysicsObject()
+# TODO[bullet]: Provide a way to get/set the player velocity?
 
 def addBulletColliders(bulletColliderPhys, bulletColliderEvt, physicsNP):
     # Handle collisions through physics via bulletColliderPhys.
