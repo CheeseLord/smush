@@ -60,7 +60,10 @@ def initPhysics(app_):
 def doPhysicsOneFrame(task):
     # dt = globalClock.getDt()
     dt = ClockObject.getGlobalClock().getDt()
-    world.doPhysics(dt)
+    # TODO[#3] This seems excessive but until we fix recoil lets leave this
+    # here for debuggin purposes
+    # 90 substeps, at 1/600 frames per second for physics updates.
+    world.doPhysics(dt, 90, 1.0/600.0)
     return task.cont
 
 def initCollisionHandling():
