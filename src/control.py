@@ -227,9 +227,8 @@ def clicked():
     # TODO[bullet]: They should be able to roll now, so we should set this.
     playerHeading, _ = getPlayerHeadingPitch()
     physicsNP.setH(playerHeading)
-    # Put the bullet some distance in front of the player to try to prevent
-    # "recoil". Unfortunately, this still isn't enough. See issue #3.
-    # TODO[#3]: Figure out a way to avoid this.
+    # Note: bullets do not collide with the player, which means we are able
+    # to create new bullets inside the player without issue.
     physicsNP.setPos(app.render.getRelativePoint(graphics.playerHeadNP,
-                                                 Point3(0, 0.5, 0)))
+                                                 Point3(0, 0, 0)))
 
