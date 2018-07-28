@@ -6,6 +6,7 @@ from direct.task import Task
 
 from panda3d.bullet import BulletRigidBodyNode
 from panda3d.bullet import BulletSphereShape
+from panda3d.core import ClockObject
 from panda3d.core import Point3
 from panda3d.core import Vec3
 from panda3d.core import WindowProperties
@@ -15,6 +16,7 @@ from src.graphics import getPlayerHeadingPitch
 from src.graphics import getRelativePlayerHeadVector
 from src.logconfig import newLogger
 from src.physics import COLLIDE_MASK_BULLET
+from src.utils import moveVectorTowardByAtMost
 from src.world_config import GRAVITY_ACCEL
 
 # FIXME[bullet]
@@ -24,6 +26,8 @@ from src import graphics
 log = newLogger(__name__)
 
 FRAMES_NEEDED_TO_WARP = 2
+
+playerVelocity = Vec3(0, 0, 0)
 
 app = None
 
@@ -80,6 +84,8 @@ def movePlayerTask(task):  # pylint: disable=unused-argument
     # TODO: Blah blah magic numbers bad. But actually though, can we put
     # all these in a config file?
 
+    dt = ClockObject.getGlobalClock().getDt()
+
     # TODO: Have different maximum forward/sideways/backward velocity
     # components. Something like this:
     #
@@ -93,11 +99,8 @@ def movePlayerTask(task):  # pylint: disable=unused-argument
     # can it feel natural with a not-absurd top speed?
     maxSpeed = 15
 
-    # TODO[bullet]: Make the player accelerate to a top speed, rather than
-    # instantaneously changing their velocity. Some parameters from before:
-    #
-    # timeToReachTopSpeed = 0.3
-    # maxAccel = maxSpeed / timeToReachTopSpeed
+    timeToReachTopSpeed = 0.3
+    maxAccel = maxSpeed / timeToReachTopSpeed
 
     # Degrees per second.
     maxRotateSpeed = 90
@@ -106,18 +109,16 @@ def movePlayerTask(task):  # pylint: disable=unused-argument
     netRunFwd   = 0
     rotateSpeed = 0
 
-    # Compute direction of target velocity in x,y-plane.
-    # TODO[bullet]: If moving diagonally, scale down. Really we want to just
-    # compute the direction here, and then scale (if nonzero) down to magnitude
-    # maxSpeed.
+    # Compute direction of target velocity in x,y-plane. Don't worry about the
+    # magnitude; we rescale the vector later.
     if inputState.isSet("moveFwd"):
-        netRunFwd   += maxSpeed
+        netRunFwd   += 1
     if inputState.isSet("moveBack"):
-        netRunFwd   -= maxSpeed
+        netRunFwd   -= 1
     if inputState.isSet("moveLeft"):
-        netRunRight -= maxSpeed
+        netRunRight -= 1
     if inputState.isSet("moveRight"):
-        netRunRight += maxSpeed
+        netRunRight += 1
 
     # x is sideways and y is forward. A positive rotation is to the left.
     # TODO: Handle rotations by setting angular velocity instead of
@@ -128,8 +129,24 @@ def movePlayerTask(task):  # pylint: disable=unused-argument
         rotateSpeed -= maxRotateSpeed
 
     # FIXME[bullet]: What about old z velocity from a previous jump??
-    playerVel = Vec3(netRunRight, netRunFwd, 0)
-    graphics.playerNP.node().setLinearMovement (playerVel, True)
+    #   - Somehow it's being maintained?! There must be some Sorcery going on
+    #     in Bullet's internals.
+    targetVel = Vec3(netRunRight, netRunFwd, 0)
+
+    # Rescale to desired magnitude (if not zero).
+    if netRunFwd != 0 or netRunRight != 0:
+        targetVel *= maxSpeed / targetVel.length()
+
+    # FIXME[bullet]: playerVelocity is in the player's reference frame, which
+    # means that if you turn, your momentum turns with you!
+    # TODO[bullet]: Can we get the velocity out of the actual Bullet object?
+    # Tracking it separately seems... pretty hacky. Not to mention, I have no
+    # idea how it interacts with other things that push the player.
+    global playerVelocity
+    playerVelocity = moveVectorTowardByAtMost(playerVelocity, targetVel,
+                                              maxAccel * dt)
+
+    graphics.playerNP.node().setLinearMovement (playerVelocity, True)
     graphics.playerNP.node().setAngularMovement(rotateSpeed)
 
     if inputState.isSet("jump"):
