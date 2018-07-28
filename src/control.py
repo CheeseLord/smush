@@ -14,6 +14,7 @@ from src.graphics import changePlayerHeadingPitch
 from src.graphics import getPlayerHeadingPitch
 from src.graphics import getRelativePlayerHeadVector
 from src.logconfig import newLogger
+from src.physics import COLLIDE_MASK_BULLET
 from src.world_config import GRAVITY_ACCEL
 
 # FIXME[bullet]
@@ -201,6 +202,7 @@ def clicked():
     node.setCcdSweptSphereRadius(radius)
 
     physicsNP = app.render.attachNewNode(node)
+    physicsNP.setCollideMask(COLLIDE_MASK_BULLET)
     physics.world.attachRigidBody(node)
 
     # Note: see

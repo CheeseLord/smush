@@ -18,6 +18,9 @@ from src import physics  # TODO[#2]
 from src.entities.panel import Floor
 from src.entities.panel import Wall
 from src.logconfig import newLogger
+from src.physics import COLLIDE_MASK_GROUND_PLANE
+from src.physics import COLLIDE_MASK_PLAYER
+from src.physics import COLLIDE_MASK_SCENERY
 from src.world_config import PLAYER_HEIGHT
 
 MIN_X =  -8
@@ -96,6 +99,7 @@ def initWorld(app_):
     groundNode.addShape(groundShape)
     groundNP = app.render.attachNewNode(groundNode)
     groundNP.setPos(0, 0, -1)
+    groundNP.setCollideMask(COLLIDE_MASK_GROUND_PLANE)
     physics.world.attachRigidBody(groundNode)
 
     # A floating spherical object which can be toggled between a smiley and
@@ -110,6 +114,7 @@ def initWorld(app_):
     # ground didn't push back and so the player would just be pushed
     # underground. At this point it's just for historical reasons.
     graphics.smileyNP.setPos(-5, 10, 1.25)
+    graphics.smileyNP.setCollideMask(COLLIDE_MASK_SCENERY)
     physics.world.attachRigidBody(smileyNode)
 
     graphics.smileyModel = loadExampleModel("smiley")
@@ -130,6 +135,7 @@ def initWorld(app_):
     # TODO[#2]: ...what about the physics code in control.py?
     graphics.playerNP = app.render.attachNewNode(player)
     graphics.playerNP.setPos(0, 0, 1)
+    graphics.playerNP.setCollideMask(COLLIDE_MASK_PLAYER)
     physics.world.attachCharacter(player)
     graphics.playerHeadNP = graphics.playerNP.attachNewNode("PlayerHead")
 

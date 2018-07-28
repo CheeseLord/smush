@@ -6,20 +6,32 @@ from panda3d.core import CollisionTraverser
 from panda3d.core import Vec3
 from panda3d.physics import PhysicsCollisionHandler
 
+from pandac.PandaModules import loadPrcFileData
+
 from src.graphics import toggleSmileyFrowney
 from src.logconfig import newLogger
 from src.world_config import GRAVITY_ACCEL
 
 log = newLogger(__name__)
 
-# Bitmasks for the "into" colliders
-# TODO: Remove "INTO_" from these names? It makes them kind of needlessly long,
-# especially since we don't have any COLLIDE_MASK_FROMs...
-COLLIDE_MASK_INTO_NONE   = BitMask32(0x0)
-COLLIDE_MASK_INTO_FLOOR  = BitMask32(0x1)
-COLLIDE_MASK_INTO_WALL   = BitMask32(0x2)
-COLLIDE_MASK_INTO_PLAYER = BitMask32(0x4)
-COLLIDE_MASK_INTO_ENTITY = BitMask32(0x8) # For misc entities flying around
+# Each object belongs to zero or more of these groups. The matrix of which
+# groups collide with which other groups is defined in initCollisionGroups.
+COLLIDE_BIT_GROUND_PLANE = 0
+COLLIDE_BIT_SCENERY      = 1 # Floors, walls
+COLLIDE_BIT_PLAYER       = 2
+COLLIDE_BIT_ENTITY       = 3 # Misc entities flying around
+COLLIDE_BIT_BULLET       = 4
+    # Bullets are split off from other entities because they don't collide with
+    # the player. Really this group is for "things that otherwise collide as
+    # entities, except that they don't collide with the player". But I couldn't
+    # think of a short name for that.
+
+COLLIDE_MASK_NONE         = BitMask32(0x0)
+COLLIDE_MASK_GROUND_PLANE = BitMask32.bit(COLLIDE_BIT_GROUND_PLANE)
+COLLIDE_MASK_SCENERY      = BitMask32.bit(COLLIDE_BIT_SCENERY     )
+COLLIDE_MASK_PLAYER       = BitMask32.bit(COLLIDE_BIT_PLAYER      )
+COLLIDE_MASK_ENTITY       = BitMask32.bit(COLLIDE_BIT_ENTITY      )
+COLLIDE_MASK_BULLET       = BitMask32.bit(COLLIDE_BIT_BULLET      )
 
 # Not used yet, but still define it preemptively because we'll probably want
 # it.
@@ -34,12 +46,17 @@ def initPhysics(app_):
     global app
     app = app_
 
+    # Allow creating a matrix of Booleans to specify which collision groups
+    # collide with which other collision groups.
+    loadPrcFileData("", "bullet-filter-algorithm groups-mask")
+
     global world
     world = BulletWorld()
     world.setGravity(Vec3(0, 0, -GRAVITY_ACCEL))
 
     app.taskMgr.add(doPhysicsOneFrame, "doPhysics")
 
+    initCollisionGroups()
     initCollisionHandling()
 
 def doPhysicsOneFrame(task):
@@ -53,6 +70,61 @@ def doPhysicsOneFrame(task):
     # 90 substeps, at 1/600 frames per second for physics updates.
     world.doPhysics(dt, 90, 1.0/600.0)
     return task.cont
+
+def initCollisionGroups():
+    """
+    Setup the rules for which collision groups can collide with which other
+    collision groups.
+    """
+
+    # Note: this matrix is required to be symmetric across the main diagonal: X
+    # can collide with Y if and only if Y can collide with X. Therefore, we
+    # only specify one half of the matrix.
+    #
+    #               ground
+    #               plane   scenery  player  entity  bullet
+    # ground plane    1        0       1       1       1
+    # scenery                  0       1       1       1
+    # player                           0       1       0
+    # entity                                   1       1
+    # bullet                                           1
+
+    # TODO: Would this be more readable organized in columns instead of rows?
+
+    world.setGroupCollisionFlag(COLLIDE_BIT_GROUND_PLANE,
+                                COLLIDE_BIT_GROUND_PLANE, True)
+    world.setGroupCollisionFlag(COLLIDE_BIT_GROUND_PLANE,
+                                COLLIDE_BIT_SCENERY,      False)
+    world.setGroupCollisionFlag(COLLIDE_BIT_GROUND_PLANE,
+                                COLLIDE_BIT_PLAYER,       True)
+    world.setGroupCollisionFlag(COLLIDE_BIT_GROUND_PLANE,
+                                COLLIDE_BIT_ENTITY,       True)
+    world.setGroupCollisionFlag(COLLIDE_BIT_GROUND_PLANE,
+                                COLLIDE_BIT_BULLET,       True)
+
+    world.setGroupCollisionFlag(COLLIDE_BIT_SCENERY,
+                                COLLIDE_BIT_SCENERY,      False)
+    world.setGroupCollisionFlag(COLLIDE_BIT_SCENERY,
+                                COLLIDE_BIT_PLAYER,       True)
+    world.setGroupCollisionFlag(COLLIDE_BIT_SCENERY,
+                                COLLIDE_BIT_ENTITY,       True)
+    world.setGroupCollisionFlag(COLLIDE_BIT_SCENERY,
+                                COLLIDE_BIT_BULLET,       True)
+
+    world.setGroupCollisionFlag(COLLIDE_BIT_PLAYER,
+                                COLLIDE_BIT_PLAYER,       False)
+    world.setGroupCollisionFlag(COLLIDE_BIT_PLAYER,
+                                COLLIDE_BIT_ENTITY,       True)
+    world.setGroupCollisionFlag(COLLIDE_BIT_PLAYER,
+                                COLLIDE_BIT_BULLET,       False)
+
+    world.setGroupCollisionFlag(COLLIDE_BIT_ENTITY,
+                                COLLIDE_BIT_ENTITY,       True)
+    world.setGroupCollisionFlag(COLLIDE_BIT_ENTITY,
+                                COLLIDE_BIT_BULLET,       True)
+
+    world.setGroupCollisionFlag(COLLIDE_BIT_BULLET,
+                                COLLIDE_BIT_BULLET,       True)
 
 def initCollisionHandling():
     """

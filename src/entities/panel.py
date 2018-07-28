@@ -9,6 +9,8 @@ from panda3d.core import Point3
 from panda3d.core import Texture
 from panda3d.core import TextureStage
 
+from src.physics import COLLIDE_MASK_SCENERY
+
 # FIXME[bullet]
 from src import physics
 
@@ -87,6 +89,7 @@ class Panel(object):
         self.rootNP = parent.attachNewNode(node)
         self.rootNP.setPos(pos)
         self.rootNP.setHpr(hpr)
+        self.rootNP.setCollideMask(COLLIDE_MASK_SCENERY)
 
         physics.world.attachRigidBody(node)
 
