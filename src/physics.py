@@ -89,42 +89,36 @@ def initCollisionGroups():
     # entity                                   1       1
     # bullet                                           1
 
-    # TODO: Would this be more readable organized in columns instead of rows?
+    setGroupCollisionFlags(COLLIDE_BIT_GROUND_PLANE,
+                           [(COLLIDE_BIT_GROUND_PLANE, 1)])
 
-    world.setGroupCollisionFlag(COLLIDE_BIT_GROUND_PLANE,
-                                COLLIDE_BIT_GROUND_PLANE, True)
-    world.setGroupCollisionFlag(COLLIDE_BIT_GROUND_PLANE,
-                                COLLIDE_BIT_SCENERY,      False)
-    world.setGroupCollisionFlag(COLLIDE_BIT_GROUND_PLANE,
-                                COLLIDE_BIT_PLAYER,       True)
-    world.setGroupCollisionFlag(COLLIDE_BIT_GROUND_PLANE,
-                                COLLIDE_BIT_ENTITY,       True)
-    world.setGroupCollisionFlag(COLLIDE_BIT_GROUND_PLANE,
-                                COLLIDE_BIT_BULLET,       True)
+    setGroupCollisionFlags(COLLIDE_BIT_SCENERY,
+                           [(COLLIDE_BIT_GROUND_PLANE, 0),
+                            (COLLIDE_BIT_SCENERY,      0)])
 
-    world.setGroupCollisionFlag(COLLIDE_BIT_SCENERY,
-                                COLLIDE_BIT_SCENERY,      False)
-    world.setGroupCollisionFlag(COLLIDE_BIT_SCENERY,
-                                COLLIDE_BIT_PLAYER,       True)
-    world.setGroupCollisionFlag(COLLIDE_BIT_SCENERY,
-                                COLLIDE_BIT_ENTITY,       True)
-    world.setGroupCollisionFlag(COLLIDE_BIT_SCENERY,
-                                COLLIDE_BIT_BULLET,       True)
+    setGroupCollisionFlags(COLLIDE_BIT_PLAYER,
+                           [(COLLIDE_BIT_GROUND_PLANE, 1),
+                            (COLLIDE_BIT_SCENERY,      1),
+                            (COLLIDE_BIT_PLAYER,       0)])
 
-    world.setGroupCollisionFlag(COLLIDE_BIT_PLAYER,
-                                COLLIDE_BIT_PLAYER,       False)
-    world.setGroupCollisionFlag(COLLIDE_BIT_PLAYER,
-                                COLLIDE_BIT_ENTITY,       True)
-    world.setGroupCollisionFlag(COLLIDE_BIT_PLAYER,
-                                COLLIDE_BIT_BULLET,       False)
+    setGroupCollisionFlags(COLLIDE_BIT_ENTITY,
+                           [(COLLIDE_BIT_GROUND_PLANE, 1),
+                            (COLLIDE_BIT_SCENERY,      1),
+                            (COLLIDE_BIT_PLAYER,       1),
+                            (COLLIDE_BIT_ENTITY,       1)])
 
-    world.setGroupCollisionFlag(COLLIDE_BIT_ENTITY,
-                                COLLIDE_BIT_ENTITY,       True)
-    world.setGroupCollisionFlag(COLLIDE_BIT_ENTITY,
-                                COLLIDE_BIT_BULLET,       True)
+    # TODO: Maybe bullets shouldn't be able to collide with other bullets?
+    # Currently if you create too many, the framerate suffers badly.
+    setGroupCollisionFlags(COLLIDE_BIT_BULLET,
+                           [(COLLIDE_BIT_GROUND_PLANE, 1),
+                            (COLLIDE_BIT_SCENERY,      1),
+                            (COLLIDE_BIT_PLAYER,       0),
+                            (COLLIDE_BIT_ENTITY,       1),
+                            (COLLIDE_BIT_BULLET,       1)])
 
-    world.setGroupCollisionFlag(COLLIDE_BIT_BULLET,
-                                COLLIDE_BIT_BULLET,       True)
+def setGroupCollisionFlags(bit1, otherBitSpec):
+    for bit2, canCollide in otherBitSpec:
+        world.setGroupCollisionFlag(bit1, bit2, bool(canCollide))
 
 def initCollisionHandling():
     """
