@@ -17,7 +17,10 @@ from src import physics  # TODO[#2]
 
 from src.entities.panel import Floor
 from src.entities.panel import Wall
+from src.graphics import getPlayerHeadingPitch
+from src.graphics import getRelativePlayerHeadVector
 from src.logconfig import newLogger
+from src.physics import COLLIDE_MASK_BULLET
 from src.physics import COLLIDE_MASK_GROUND_PLANE
 from src.physics import COLLIDE_MASK_PLAYER
 from src.physics import COLLIDE_MASK_SCENERY
@@ -31,6 +34,7 @@ MAX_Y =  14
 log = newLogger(__name__)
 
 app = None
+
 
 def initWorld(app_):
     """
@@ -170,6 +174,52 @@ def loadModel(modelName):
 
     return app.loader.loadModel(modelsDir + modelName)
 
+
 def loadExampleModel(modelName):
     return app.loader.loadModel(modelName)
+
+
+def makePlayerBullet():
+    radius = 0.02
+    shape = BulletSphereShape(radius)
+
+    node = BulletRigidBodyNode("smiling bullet")
+    node.setMass(0.05)
+    node.addShape(shape)
+
+    # https://www.panda3d.org/manual/index.php/
+    #     Bullet_Continuous_Collision_Detection
+    node.setCcdMotionThreshold(1e-7)
+    node.setCcdSweptSphereRadius(radius)
+
+    physicsNP = app.render.attachNewNode(node)
+    physicsNP.setCollideMask(COLLIDE_MASK_BULLET)
+    physics.world.attachRigidBody(node)
+
+    # Note: see
+    #     https://www.panda3d.org/manual/index.php/
+    #         Bullet_Continuous_Collision_Detection
+    # for an alternate strategy for aiming a bullet where the player is
+    # looking. The example code there uses base.camLens.extrude.
+    # TODO[bullet]: Actually track the player's velocity, add it to the
+    # bullet's velocity here.
+    playerVel = Vec3(0, 0, 0)
+    bulletVel = playerVel + getRelativePlayerHeadVector(Vec3(0, 30, 0))
+
+    # TODO: Also account for the player's angular velocity.
+    # physicsNP.node().getPhysicsObject().setVelocity(playerVel + bulletVel)
+    node.setLinearVelocity(bulletVel)
+
+    ball = app.loader.loadModel("smiley")
+    ball.reparentTo(physicsNP)
+    ball.setScale(radius)
+    # Intentionally don't set the pitch, because the balls can't roll and it
+    # would look weird if they were all stuck at different arbitrary pitches.
+    # TODO[bullet]: They should be able to roll now, so we should set this.
+    playerHeading, _ = getPlayerHeadingPitch()
+    physicsNP.setH(playerHeading)
+    # Note: bullets do not collide with the player, which means we are able
+    # to create new bullets inside the player without issue.
+    physicsNP.setPos(app.render.getRelativePoint(graphics.playerHeadNP,
+                                                 Point3(0, 0, 0)))
 

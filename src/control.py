@@ -11,14 +11,12 @@ from panda3d.core import Vec3
 from panda3d.core import WindowProperties
 
 from src.graphics import changePlayerHeadingPitch
-from src.graphics import getPlayerHeadingPitch
-from src.graphics import getRelativePlayerHeadVector
 from src.logconfig import newLogger
 from src.physics import COLLIDE_MASK_BULLET
+from src.world import makePlayerBullet
 from src.world_config import GRAVITY_ACCEL
 
 # FIXME[bullet]
-from src import physics
 from src import graphics
 
 log = newLogger(__name__)
@@ -31,6 +29,7 @@ app = None
 # up to FRAMES_NEEDED_TO_WARP.
 successfulMouseWarps = 0
 
+
 def initControl(app_):
     # Why does 'global x' cause pylint to assume x is a constant? If I wanted
     # to use x as a constant I'd just reference it; I wouldn't go to the
@@ -39,6 +38,7 @@ def initControl(app_):
     app = app_
 
     initKeyboardAndMouse()
+
 
 def initKeyboardAndMouse():
     # Hide the mouse.
@@ -52,9 +52,6 @@ def initKeyboardAndMouse():
 
     # Handle the mouse.
     app.accept("mouse1", clicked, [])
-
-    # Camera toggle.
-    # app.accept("f3", toggleCameraStyle, [])
 
     # Handle window close request (clicking the X, Alt-F4, etc.)
     # app.win.set_close_request_event("window-close")
@@ -71,6 +68,7 @@ def initKeyboardAndMouse():
 
     app.taskMgr.add(controlCameraTask, "ControlCameraTask")
     app.taskMgr.add(movePlayerTask,    "MovePlayerTask")
+
 
 # We don't use task, but we can't remove it because the function signature
 # is from Panda3D.
@@ -143,6 +141,7 @@ def movePlayerTask(task):  # pylint: disable=unused-argument
 
     return Task.cont
 
+
 # TODO: Rename this. This is the function that moves the player based on the
 # mouse.
 def controlCameraTask(task):  # pylint: disable=unused-argument
@@ -170,8 +169,7 @@ def controlCameraTask(task):  # pylint: disable=unused-argument
     # mouse warp since the mouse last entered the window, which means that
     # the mouse's current position can't be trusted to be a meaningful
     # relative value.
-    if mouseWarpSucceeded and \
-            successfulMouseWarps >= FRAMES_NEEDED_TO_WARP:
+    if mouseWarpSucceeded and successfulMouseWarps >= FRAMES_NEEDED_TO_WARP:
         # I don't know why these negative signs work but they stop the
         # people being upside-down.
         deltaHeading = (mouseX - centerX) * -mouseGain
@@ -187,48 +185,7 @@ def controlCameraTask(task):  # pylint: disable=unused-argument
 
     return Task.cont
 
-# TODO: Probably split this up, have a separate call for "shoot gun".
+
 def clicked():
-    radius = 0.02
-    shape = BulletSphereShape(radius)
-
-    node = BulletRigidBodyNode("smiling bullet")
-    node.setMass(0.05)
-    node.addShape(shape)
-
-    # https://www.panda3d.org/manual/index.php/
-    #     Bullet_Continuous_Collision_Detection
-    node.setCcdMotionThreshold(1e-7)
-    node.setCcdSweptSphereRadius(radius)
-
-    physicsNP = app.render.attachNewNode(node)
-    physicsNP.setCollideMask(COLLIDE_MASK_BULLET)
-    physics.world.attachRigidBody(node)
-
-    # Note: see
-    #     https://www.panda3d.org/manual/index.php/
-    #         Bullet_Continuous_Collision_Detection
-    # for an alternate strategy for aiming a bullet where the player is
-    # looking. The example code there uses base.camLens.extrude.
-    # TODO[bullet]: Actually track the player's velocity, add it to the
-    # bullet's velocity here.
-    playerVel = Vec3(0, 0, 0)
-    bulletVel = playerVel + getRelativePlayerHeadVector(Vec3(0, 30, 0))
-
-    # TODO: Also account for the player's angular velocity.
-    # physicsNP.node().getPhysicsObject().setVelocity(playerVel + bulletVel)
-    node.setLinearVelocity(bulletVel)
-
-    ball = app.loader.loadModel("smiley")
-    ball.reparentTo(physicsNP)
-    ball.setScale(radius)
-    # Intentionally don't set the pitch, because the balls can't roll and it
-    # would look weird if they were all stuck at different arbitrary pitches.
-    # TODO[bullet]: They should be able to roll now, so we should set this.
-    playerHeading, _ = getPlayerHeadingPitch()
-    physicsNP.setH(playerHeading)
-    # Note: bullets do not collide with the player, which means we are able
-    # to create new bullets inside the player without issue.
-    physicsNP.setPos(app.render.getRelativePoint(graphics.playerHeadNP,
-                                                 Point3(0, 0, 0)))
+    makePlayerBullet()
 
