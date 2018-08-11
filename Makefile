@@ -2,20 +2,18 @@
 
 # To use a Python binary other than the one in your PATH, run
 #     make 'PYTHON=/path/to/alternate/python2.7'
-# TODO: Detect if the user's Python is Anaconda and print a useful warning in
-# that case. Should be able to use something like:
-#     python -c "import sys; print sys.version" | grep Anaconda
-# (See https://stackoverflow.com/a/21282690).
 PYTHON ?= python2.7
 
 VIRTUALENV = ./venv
 BUILDFILES = build-resources
+BIN        = bin
 
 all: smush
 
 # .PHONY-ness of smush matters, because there actually is a file "smush" (which
 # is not rebuilt by "make smush").
-smush: Makefile $(BUILDFILES)/requirements.txt
+smush: Makefile $(BUILDFILES)/requirements.txt $(BIN)/reject_anaconda.sh
+	$(BIN)/reject_anaconda.sh $(PYTHON)
 	virtualenv "-p$(PYTHON)" $(VIRTUALENV)
 	bash -c 'source $(VIRTUALENV)/bin/activate; pip install -r $(BUILDFILES)/requirements.txt'
 
