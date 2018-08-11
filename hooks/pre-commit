@@ -22,16 +22,20 @@ fi
 # somewhere that <hash for current staged repo state> validated cleanly. If
 # that note is present, then don't re-validate during pre-commit hook.
 
-# Amazingly enough, pytest doesn't seem to have an option for "produce no
-# output on success". So simulate that ourselves.
-# Thanks to:
-#     https://unix.stackexchange.com/a/41388
-# for the simple solution to this, which doesn't require a temp file or
-# something more complicated.
-if ! test_output="$(./bin/test.sh -- --color=yes)"; then
-    echo "$test_output"
-    fail "Not all tests passed."
-fi
+# Disable testing, because it doesn't work if you have Anaconda installed on
+# your system and we haven't managed to figure out how to fix this. This would
+# be a problem, except we don't actually have any tests.
+#
+# # Amazingly enough, pytest doesn't seem to have an option for "produce no
+# # output on success". So simulate that ourselves.
+# # Thanks to:
+# #     https://unix.stackexchange.com/a/41388
+# # for the simple solution to this, which doesn't require a temp file or
+# # something more complicated.
+# if ! test_output="$(./bin/test.sh -- --color=yes)"; then
+#     echo "$test_output"
+#     fail "Not all tests passed."
+# fi
 
 # -rn is shorthand for "--reports=no", and suppresses all output except the
 # actual messages (errors, warnings, etc.).
