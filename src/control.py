@@ -4,15 +4,11 @@ import sys
 from direct.showbase.InputStateGlobal import inputState
 from direct.task import Task
 
-from panda3d.bullet import BulletRigidBodyNode
-from panda3d.bullet import BulletSphereShape
-from panda3d.core import Point3
 from panda3d.core import Vec3
 from panda3d.core import WindowProperties
 
 from src.graphics import changePlayerHeadingPitch
 from src.logconfig import newLogger
-from src.physics import COLLIDE_MASK_BULLET
 from src.world import makePlayerBullet
 from src.world_config import GRAVITY_ACCEL
 
